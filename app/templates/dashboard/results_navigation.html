@@ -1,0 +1,26 @@
+<p>
+
+    <a href="{{ url_for('display_results_chart', filename=video_id) }}" class="btn btn-primary">
+        Summary
+    </a>
+
+    <a href="{{ url_for('display_results_images', filename=video_id) }}" class="btn btn-primary">
+        Frame by Frame Analysis
+    </a>
+    <a href="{{ url_for('display_results_coordinates', filename=video_id) }}" class="btn btn-primary">
+        X,Y Coordinate Plot
+    </a>
+    <a href="{{ url_for('display_results_polar_plot', filename=video_id) }}" class="btn btn-primary">
+        Range of Motion Polar Plot
+    </a>
+    <a href="{{ url_for('display_results_table', filename=video_id) }}" class="btn btn-primary">
+        Raw Data (.csv)
+    </a>
+    <a href="{{ url_for('display_results_pose_angles', filename=video_id) }}" class="btn btn-primary">
+        Closest Angles
+    </a>
+    <a href="{{ url_for('display_results_pose_distances', filename=video_id) }}" class="btn btn-primary">
+        Closest Distances
+    </a>
+
+</p>

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h1 class="visually-hidden">{{ page_title }}</h1>
+
+<div class="px-4 pt-5 my-5 border-bottom">
+
+    <div class="container px-4 py-5">
+        <h1 class="display-4 text-body-emphasis border-bottom pb-2">Analysis Results</h2>
+            <p>Video ID: {{ video_id }}</p>
+            {% include 'results_navigation.html' %}
+
+
+            <div class="row">
+                <div class="container mt-4">
+                    <div class="row">
+                        {% for image_file in image_files %}
+                        <div class="col-md-2 mb-3">
+                            <!-- Update the src attribute to point to the correct route for serving images -->
+                            <img src="{{ url_for('send_image', filename=image_file) }}" class="img-fluid"
+                                alt="Pose Image">
+                        </div>
+                        {% endfor %}
+
+                    </div>
+                </div>
+
+            </div>
+
+
+    </div>
+</div>
+</div>
+
+
+{% endblock %}

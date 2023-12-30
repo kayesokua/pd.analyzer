@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h1 class="visually-hidden">{{ page_title }}</h1>
+
+<div class="px-4 pt-5 my-5 border-bottom">
+
+    <div class="container px-4 py-5">
+        <h1 class="display-4 text-body-emphasis border-bottom pb-2">Range of Motion</h2>
+            <p>Video ID: {{ video_id }}</p>
+            {% include 'results_navigation.html' %}
+
+            <div id="pose-polar-plot"></div>
+
+            <script>
+                var graphJSON = {{ graphJSON | safe }};
+                Plotly.newPlot('pose-polar-plot', graphJSON);
+            </script>
+
+
+    </div>
+</div>
+</div>
+
+
+{% endblock %}

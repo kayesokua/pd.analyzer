@@ -1,0 +1,54 @@
+
+from flask import Blueprint, request, render_template, url_for, redirect, send_file,json
+from werkzeug.utils import secure_filename
+
+from services.converter_video import *
+from services.converter_gif import *
+from services.pose_landmarker import *
+from services.pose_recognition import *
+from services.data_visualization import *
+
+import uuid
+
+import os
+
+bp = Blueprint("upload", __name__, url_prefix="/upload")
+
+@bp.route('/new', methods=['POST', 'GET'])
+def upload_new_choreography():
+    if request.method == 'POST':
+        if 'dance_uploader' not in request.files:
+            return "No file part"
+
+        file = request.files['dance_uploader']
+        if file.filename == '':
+            return "No selected file"
+
+        if file:
+            filename = secure_filename(file.filename)
+            if not filename.lower().endswith('.mp4'):
+                return "File format not supported. Please upload an MP4 file."
+            
+            new_filename = f"{uuid.uuid4().hex}"
+            
+            new_video_path = "data/uploads/" + new_filename + ".mp4"            
+            file.save(new_video_path)
+            
+            new_frames_path = decompose_video_to_frames(new_video_path, new_filename)
+            
+            pose_features_df = create_pose_landmark_dictionary(new_frames_path)
+            pose_features_df.to_csv(f'{new_frames_path}/results.csv',index=False)
+            
+            new_plot_frames_path = os.path.join(new_frames_path, 'plot')
+            
+            for index, _ in pose_features_df.iterrows():
+                basic_plot_pose_dictionary_entry(pose_features_df, index, new_plot_frames_path)
+            
+            new_plot_gif_path = os.path.join(new_frames_path, 'animation.gif')
+            create_gif_from_images(new_plot_frames_path, new_plot_gif_path)
+
+            return redirect(url_for('display_results_chart', filename=new_filename))
+        else:
+            return "something went wrong"
+
+    return redirect(url_for('home'))

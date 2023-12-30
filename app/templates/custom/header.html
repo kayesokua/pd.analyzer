@@ -1,0 +1,46 @@
+<header data-bs-theme="dark">
+    <div class="collapse text-bg-dark bg-black" id="navbarHeader">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-8 col-md-7 py-4">
+                    <h4>About</h4>
+                    <p class="text-body-secondary">
+                        Pole dancing is a performance art that combines dance and acrobatics around a vertical pole. It
+                        has ancient origins, but gained acceptance as a legitimate form of dance and fitness in the late
+                        20th century. This capstone project aims to leverage the power of data science to enhance pole
+                        dancing by developing a Dance Summarization Model, specifically for solo pole dancing
+                        performances. The model will provide feedback that could contain a summary of poses detected,
+                        movement quality, describe the effort, and other insights that could be explored.</p>
+                </div>
+                <div class="col-sm-4 offset-md-1 py-4">
+                    <h4>Navigation</h4>
+                    <ul class="list-unstyled">
+                        {% if current_user.is_authenticated %}
+                        {% if current_user.can(Permission.MODERATE) %}
+                        <li><a href="{{ url_for('main.moderate') }}" class="text-white">Moderate Comments</a></li>
+                        {% endif %}
+                        <li><a href="{{ url_for('main.user_upload') }}" class="text-white">Upload</a></li>
+                        <li><a href="{{ url_for('auth.change_password') }}" class="text-white">Change Password</a></li>
+                        <li><a href="{{ url_for('auth.change_email_request') }}" class="text-white">Change Email</a></li>
+                        <li><a href="{{ url_for('auth.logout') }}" class="text-white">Log Out</a></li>
+                        {% else %}
+                        <li><a href="{{ url_for('auth.login') }}" class="text-white">Log In</a></li>
+                        {% endif %}
+                        
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="navbar navbar-dark bg-black shadow-sm">
+        <div class="container">
+            <a href="{{ url_for('main.index') }}" class="navbar-brand d-flex align-items-center">
+                <strong>pd.analyzer</strong>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarHeader"
+                aria-controls="navbarHeader" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
+    </div>
+</header>
