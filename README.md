@@ -1,11 +1,36 @@
-# pd.analyzer
-======
-A web platform to objectively analyse a pole dance choroegraphy
---------------------------------------------
+# pd.analyzer 💃 🕺
+
+pd.analyzer is a work-in-progress application designed to bring the power of data science and machine learning to the art of pole dancing. It aims to create a comprehensive framework for analyzing, summarizing, and enhancing pole dance performances using advanced computational techniques.
+
+## Structure
+
+```
+├── LICENSE
+├── README.md
+├── app/ # Main application directory.
+│   ├── api/ # Module for api endpoints
+│   ├── auth/ # Module for account authentication and authorization
+│   ├── dashboard/ # Module for dashboard and reports
+│   ├── main/ # Main web app module
+│   ├── models/ # All data models found in the app
+│   ├── services/ # Core services like video processing, pose recognition, and data visualization.
+│   ├── static/ # Assets, css, js, icons..
+│   └── templates/ # HTML templates for rendering the web interface.
+├── data
+│   ├── external # Data bucket for pdictionary
+│   ├── processed # Data bucket for processed results
+│   └── uploads # Data bucket for raw video uploads
+│   ..prod.sqlite # Database for web activities and video metadeta
+├── migrations
+├── requirements # Requirements
+├── run.py
+├── scripts # Standalone utility scripts
+└── tests
+```
+
+## Requirements
+Python dependencies are listed in `requirements/`. They include Flask for web framework, OpenCV for image processing, and various machine learning libraries.
+
 ## Resources
 1. Project Template from [Miguel Grinberg's Flask Web Development, 2nd Edition](https://github.com/miguelgrinberg/flasky/)
 2. https://github.com/google/mediapipe
-
-Pole Dictionary Data Resources:
-1. https://www.goodreads.com/book/show/43151907-pole-dance-fitness
-2. https://eu.polejunkie.com/products/spin-city-the-ultimate-pole-bible-6th-edition
