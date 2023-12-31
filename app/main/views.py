@@ -58,6 +58,7 @@ def index_test():
 def upload_dance_video():
     form = VideoPostForm()
     if current_user.can(Permission.WRITE) and form.validate_on_submit():
+        
         post = Post(author=current_user, title=form.title.data, body=form.body.data)
         db.session.add(post)
         db.session.commit()
@@ -89,7 +90,10 @@ def upload_dance_video():
         # Start Procesing
         decompose_video_to_frames(abs_video_filepath, abs_processed_data_dir)
         print("Processed video!")
-        pose_features_df = create_pose_landmark_dictionary(abs_processed_data_dir)
+
+        model_path = os.path.join(current_app.root_path, 'models', 'ml', 'pose_landmarker.task')
+        
+        pose_features_df = create_pose_landmark_dictionary(abs_processed_data_dir, model_path)
         pose_features_df.to_csv(f'{abs_processed_data_dir}/results.csv',index=False)
         print("Concatenated results!")
             
