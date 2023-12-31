@@ -38,9 +38,7 @@ def index():
                            show_followed=show_followed, pagination=pagination)
     
 @main.route('/videos/<author_id>/<post_id>', methods=['GET'])
-def serve_uploaded_video(author_id, post_id):
-    #data_directory = os.path.abspath(os.path.join(current_app.root_path, '..', 'data', 'uploads', author_id))
-    #filename = f'{post_id}.mp4'
+def serve_uploaded_video():
     data_directory = os.path.abspath(os.path.join(current_app.root_path, '..', 'data', 'uploads', 'user0'))
     return send_from_directory(data_directory, 'default1.mp4')
 
@@ -308,3 +306,38 @@ def moderate_disable(id):
     db.session.add(comment)
     db.session.commit()
     return redirect(url_for('.moderate',page=request.args.get('page', 1, type=int)))
+
+@main.route('/dictionary')
+def get_pose_dictionary():
+    rel_path = os.path.join('data', 'external', 'pdictionary.csv')
+    abs_path = os.path.abspath(os.path.join(current_app.root_path, '..', rel_path))
+    try:
+        df = pd.read_csv(abs_path)
+        posenames = df['posename'].tolist()
+        orientations = df['orientation'].tolist()
+        categories = df['category'].tolist()
+        images = df['filename'].tolist()
+        gif_images = [image[:-4] + '.gif' if image.endswith('.png') else image for image in images]
+        poses = zip(posenames, orientations, categories, images, gif_images)
+        current_path = os.path.abspath(os.path.join(current_app.root_path,'..', 'data', 'external'))
+        return render_template('dictionary/gallery.html', poses=poses,  current_path=current_path, page=request.path,  page_title="Poses Dictionary")
+    except Exception as e:
+        return f"An error occurred: {e}"
+
+@main.route('/dictionary/table')
+def get_pose_dictionary_table():
+    rel_path = os.path.join('data', 'external', 'pdictionary.csv')
+    abs_path = os.path.abspath(os.path.join(current_app.root_path, '..', rel_path))
+    try:
+        df = pd.read_csv(abs_path)
+        pose_results = df.to_dict(orient='records')
+        return render_template('dictionary/table.html',results=pose_results, page=request.path, page_title="Pose Dictionary (Raw)")
+    except Exception as e:
+        return f"An error occurred: {e}"
+    
+@main.route('/dictionary/<category>/plot3d/animated/<gif>', methods=['GET'])
+def serve_plot3d_object(category,gif):
+    data_directory = os.path.abspath(os.path.join(current_app.root_path, '..', 'data', 'external'))
+    rel_filepath = os.path.join(category,'plot3d','animated',gif)
+    return send_from_directory(data_directory,rel_filepath)
+

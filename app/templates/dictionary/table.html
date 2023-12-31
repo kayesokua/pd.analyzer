@@ -1,0 +1,45 @@
+{% extends 'custom/base.html' %}
+
+{% block content %}
+
+
+<div class="px-4 pt-5 my-2 border-bottom">
+
+    <div class="container px-4 py-5">
+        
+        <h1 class="display-6 text-body-emphasis border-bottom pb-2">{{ page_title }}</h1>
+            <div class="row">
+                <div class="table-responsive">
+
+                    <table class="table table-striped" style="font-size: x-small;">
+
+                        <thead>
+                            <tr>
+                                {% if results %}
+                                {% for key in results[0] %}
+                                <th>{{ key }}</th>
+                                {% endfor %}
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in results %}
+                            <tr>
+                                {% for value in row.values() %}
+                                <td>{{ value }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+
+    </div>
+</div>
+</div>
+
+
+{% endblock %}

@@ -1,5 +1,6 @@
 import os
 import cv2
+import re
 import pandas as pd
 import mediapipe as mp
 import numpy as np
@@ -8,12 +9,8 @@ from mediapipe.tasks.python import vision
 from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
 
-
-
 from services.pose_add_features import *
 from services.pose_classifier import *
-from services.data_visualization import *
-from services.converter_gif import *
 
 def draw_landmarks_on_image(rgb_image, detection_result):
     pose_landmarks_list = detection_result.pose_landmarks
@@ -33,14 +30,20 @@ def draw_landmarks_on_image(rgb_image, detection_result):
 
     return annotated_image
 
-def create_pose_landmark_dictionary(new_frames_path):
-    base_options = python.BaseOptions(model_asset_path='models/ml/pose_landmarker.task')
+def create_pose_landmark_dictionary(new_frames_path, category):
+    base_options = python.BaseOptions(model_asset_path='app/models/ml/pose_landmarker.task')
     options = vision.PoseLandmarkerOptions(base_options=base_options,output_segmentation_masks=True)
     landmarker = vision.PoseLandmarker.create_from_options(options)
+    
+    annotated_dir = os.path.join(new_frames_path,'annotated')
+    os.makedirs(annotated_dir, exist_ok=True)   
 
     filenames = [os.path.join(new_frames_path, f) for f in os.listdir(new_frames_path) if f.endswith(".png")]
     filenames.sort()
+    
     pose_data = []
+    pose_world_data = []
+    
     error = 0
 
     for image_file_path in filenames:
@@ -51,22 +54,21 @@ def create_pose_landmark_dictionary(new_frames_path):
             
             detection_result = landmarker.detect(mp_image)
             
+            image_basename = os.path.basename(image_file_path)
+            image_basename_modified = re.sub(r'[\d-]', ' ', image_basename.split('.')[0])
+            
             if detection_result:
                 annotated_image = draw_landmarks_on_image(image_bgr, detection_result)
                 annotated_image_rgb = cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB)
-                annotated_image_path = os.path.join(new_frames_path, 'annotated_' + os.path.basename(image_file_path))
+                annotated_image_path = os.path.join(annotated_dir,os.path.basename(image_file_path))
                 cv2.imwrite(annotated_image_path, annotated_image_rgb)
-                
-                image_basename = os.path.basename(image_file_path).split('.')[0]
-                
-                plot_filepath = os.path.join(new_frames_path, 'plot')
-                plot_filename = os.path.join(plot_filepath, f'{image_basename}.png')
-            
+                                
                 for pose_landmarks in detection_result.pose_landmarks:
                     pose_info = {
-                        'filename': image_file_path,
-                        'plot_filename': plot_filename,
-                        'annotated_filename':annotated_image_path}
+                        'filepath_abs': image_file_path,
+                        'filename': image_basename,
+                        'posename': image_basename_modified,
+                        'category': category}
                     
                     for idx,landmark in enumerate(pose_landmarks):
                         idx_str = str(idx).zfill(2)
@@ -75,6 +77,21 @@ def create_pose_landmark_dictionary(new_frames_path):
                         pose_info[f'landmark_{idx_str}_z'] = landmark.z
                         pose_info[f'landmark_{idx_str}_v'] = landmark.visibility
                     pose_data.append(pose_info)
+                    
+                for pose_world_landmarks in detection_result.pose_world_landmarks:
+                    pose_info = {
+                        'filepath_abs': image_file_path,
+                        'filename': image_basename,
+                        'posename': image_basename_modified,
+                        'category': category}
+                    
+                    for idx,landmark in enumerate(pose_world_landmarks):
+                        idx_str = str(idx).zfill(2)
+                        pose_info[f'landmark_{idx_str}_x'] = landmark.x
+                        pose_info[f'landmark_{idx_str}_y'] = landmark.y
+                        pose_info[f'landmark_{idx_str}_z'] = landmark.z
+                        pose_info[f'landmark_{idx_str}_v'] = landmark.visibility
+                    pose_world_data.append(pose_info)
                 
             else:
                 print(f"No pose detected for {image_file_path}")
@@ -84,15 +101,22 @@ def create_pose_landmark_dictionary(new_frames_path):
             print(f"Error processing {image_file_path}: {e}")
 
     pose_df = pd.DataFrame(pose_data)
+    pose_world_df = pd.DataFrame(pose_world_data)
     
-    x_columns = sorted([col for col in pose_df.columns if col.endswith('_x')])
-    y_columns = sorted([col for col in pose_df.columns if col.endswith('_y')])
     
-    pose_features1_df = pose_df.apply(lambda row: condense_pole_dictionary(row, x_columns, y_columns), axis=1)
-    pose_features1_df['orientation'] = pose_features1_df.apply(classify_row_orientation, axis=1)
-    pose_features2_df = compute_connected_joints_angles(pose_features1_df)
-    pose_features3_df = calculate_pose_angle_difference(pose_features2_df)
+    # Transforming pose landmark data...
+    x_columns = sorted([col for col in pose_world_df.columns if col.endswith('_x')])
+    y_columns = sorted([col for col in pose_world_df.columns if col.endswith('_y')])
+    z_columns = sorted([col for col in pose_world_df.columns if col.endswith('_z')])
     
-    pose_features3_df.to_csv(f'{new_frames_path}/results.csv',index=False)
+    pose_2d_df = pose_df.apply(lambda row: condense_pole_dictionary(row, x_columns, y_columns), axis=1)
+    pose_2d_df['orientation'] = pose_2d_df.apply(classify_row_orientation, axis=1)
+    pose_2d_features_df = compute_connected_joints_angles(pose_2d_df)
+    pose_2d_features_df.to_csv(f'{new_frames_path}/dictionary_2d.csv',index=False)
+    
+    pose_3d_df = pose_world_df.apply(lambda row: condense_pole_dictionary_3d(row, x_columns, y_columns, z_columns), axis=1)
+    pose_3d_df['orientation'] = pose_3d_df.apply(classify_row_orientation, axis=1)
+    pose_3d_features_df = compute_connected_joints_angles_3d(pose_3d_df)
+    pose_3d_features_df.to_csv(f'{new_frames_path}/dictionary_3d.csv',index=False)
 
-    return pose_features3_df
+    return pose_2d_features_df, pose_3d_features_df
