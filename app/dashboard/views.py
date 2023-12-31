@@ -1,11 +1,13 @@
 from flask import render_template, request
+from flask_login import login_required, current_user
 from . import dashboard
 
 @dashboard.route('/', methods=['GET'])
+@login_required
 def index():
-    return render_template('dashboard/results.html', page=request.path)
+    return render_template("dashboard/index.html", page=request.path)
 
-@dashboard.route('/report/<post_id>', methods=['GET'])
-def individual_report(post_id):
-    post_id = post_id
-    return f'Reporting for {post_id}'
+@dashboard.route('/reports', methods=['GET'])
+@login_required
+def reports_overview():
+    return render_template("dashboard/reports.html", page=request.path)

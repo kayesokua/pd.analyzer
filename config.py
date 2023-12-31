@@ -18,8 +18,11 @@ class Config:
     PDAPP_ADMIN = os.environ.get('PDAPP_ADMIN')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     PDAPP_POSTS_PER_PAGE = 5
+    
     PDAPP_FOLLOWERS_PER_PAGE = 50
     PDAPP_COMMENTS_PER_PAGE = 30
+    
+    PDAPP_POSES_PER_PAGE = 9
 
     @staticmethod
     def init_app(app):

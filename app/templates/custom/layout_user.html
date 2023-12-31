@@ -1,0 +1,116 @@
+{% extends 'custom/base.html' %}
+{% import "_macros.html" as macros %}
+
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-3">
+            <img class="img-rounded profile-thumbnail" src="{{ user.gravatar(size=100) }}"
+                style="border-radius: 15rem;">
+        </div>
+        <div class="col-8">
+            <h1>{{ user.username }} <a href="mailto:{{ user.email }}" class="btn btn-outline-secondary">Send Email <span
+                        class="badge text-bg-danger">ADMIN</span></a></h1>
+
+            {% if user.name or user.location %}
+            <p>
+                {% if user.name %}{{ user.name }}{% endif %}
+                {% if user.location %}
+                from <i>{{ user.location }}</i></a>
+                {% endif %}
+            </p>
+            {% if current_user.is_administrator() %}
+            <p>
+            </p>
+            {% endif %}
+
+            </p>
+            {% endif %}
+
+            <p><strong>About Me:</strong>
+                {% if user.about_me %}{{ user.about_me }} | {% endif %}
+                Member since {{ moment(user.member_since).format('L') }}.
+                Last seen {{ moment(user.last_seen).fromNow() }}.
+                {{ user.posts.count() }} video posts.
+                {{ user.comments.count() }} comments.
+            </p>
+
+            <p>
+                {% if current_user.can(Permission.FOLLOW) and user != current_user %}
+                {% if not current_user.is_following(user) %}
+                <a href="{{ url_for('.follow', username=user.username) }}" class="btn btn-primary">Follow</a>
+                {% else %}
+                <a href="{{ url_for('.unfollow', username=user.username) }}" class="btn btn-danger">Unfollow</a>
+                {% endif %}
+                {% endif %}
+                <a href="{{ url_for('.followers', username=user.username) }}" class="btn btn-outline-secondary">
+                    Followers: {{user.followers.count() - 1 }} <span class="badge text-bg-danger">ADMIN</span></a></a>
+                <a href="{{ url_for('.followed_by', username=user.username) }}" class="btn btn-outline-secondary">
+                    Following: {{user.followed.count() - 1 }} <span class="badge text-bg-danger">ADMIN</span></a></a>
+                {% if current_user.is_authenticated and user != current_user and user.is_following(current_user) %}
+                | <span class="label label-default">Follows you</span>
+                {% endif %}
+
+            </p>
+
+            {% if user == current_user %}
+            {% include "custom/_quicknav_user.html" %}
+            {% endif %}
+        </div>
+
+    </div>
+    <hr class="my-5">
+    <p class="lead my-5 fw-bold">
+    <h3>Choreographies by {{ user.username }}</h3>
+    </p>
+
+    <div class="row" data-masonry='{"percentPosition": true }'>
+        {% for post in posts %}
+        <div class="col-sm-6 col-lg-4 mb-4">
+            <div class="card p-3">
+                <h6 class="card-title">{{ post.title | safe }}</h6>
+                <div class="card-img-top">
+                    <figure class="p-3 mb-0" style="height: 100%;">
+                        <video class="figure-img img-fluid rounded"
+                            src="{{ url_for('main.serve_uploaded_video', author_id=post.author_id, post_id=post.id) }}">
+
+                        </video>
+
+
+                    </figure>
+                </div>
+                <div class="card-body">
+                    <p>
+                        <img class="img-rounded profile-thumbnail" src="{{ post.author.gravatar(size=25) }}"
+                            style="border-radius:1rem">
+                        <a href="{{ url_for('.user', username=post.author.username) }}">{{ post.author.username }}</a>
+                        posted {{ moment(post.last_updated_on).fromNow() }}
+                    </p>
+                    <p class="card-text">{{ post.body | truncate(100, True) }}</p>
+                </div>
+
+                {% if current_user == post.author %}
+                <a href="{{ url_for('.edit', id=post.id) }}">
+                    <span class="label label-primary">Edit</span>
+                </a>
+                {% elif current_user.is_administrator() %}
+                <a href="{{ url_for('.edit', id=post.id) }}">
+                    <span class="label label-danger">Edit [Admin]</span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+
+        {% endfor %}
+    </div>
+    {% if pagination %}
+    <div class="pagination">
+        {{ macros.pagination_widget(pagination, '.index') }}
+    </div>
+    {% endif %}
+
+</div>
+</div>
+{% endblock %}

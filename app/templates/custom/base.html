@@ -10,10 +10,27 @@
     <title>pd.analyzer</title>
     <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
 
-    {% if page.startswith('/results') %}
+    {% if page.startswith('/dashboard') %}
         <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     {% endif %}
 
+    {% if page.startswith('/test') %}
+    <style>
+        .bd-placeholder-img {
+          font-size: 1.125rem;
+          text-anchor: middle;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          user-select: none;
+        }
+  
+        @media (min-width: 768px) {
+          .bd-placeholder-img-lg {
+            font-size: 3.5rem;
+          }
+        }
+      </style>
+    {% else %}
     <style>
         .bd-placeholder-img {
             font-size: 1.125rem;
@@ -92,17 +109,22 @@
             display: block !important;
         }
     </style>
+     <link href="{{ url_for('static', filename='css/heroes.css') }}" rel="stylesheet">
+    {% endif %}
 
-    <!-- Custom styles for this template -->
-    <link href="{{ url_for('static', filename='css/heroes.css') }}" rel="stylesheet">
 </head>
 <main>
+
     {% include 'custom/header.html' %}
     {% include 'custom/colorscheme.html' %}
     {% block content %}{% endblock %}
     {% include 'custom/footer.html' %}
 </main>
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    {% if page.startswith('/test') %}
+        <script async src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js" integrity="sha384-GNFwBvfVxBkLMJpYMOABq3c+d3KnQxudP/mGPkzpZSTYykLBNsZEnG2D9G/X/+7D" crossorigin="anonymous"></script>
+    {% endif %}
 
 </body>
 

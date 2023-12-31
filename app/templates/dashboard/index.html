@@ -1,0 +1,150 @@
+{% extends 'custom/base.html' %}
+{% import "_macros.html" as macros %}
+
+
+{% block content %}
+<div class="container py-5">
+  {% include "custom/_quicknav.html" %}
+  <hr class="my-5">
+
+  <div class="row">
+
+    <div class="row align-items-md-stretch">
+
+      <h2 class="mb-3">📈 Overall Stats. </h2>
+
+          <div class="row">
+            <div class="col-3">
+              <div class="card text-bg-secondary mb-3">
+                <div class="card-body">
+                  <h5 class="display-6">20</h5>
+                  <h6 class="card-subtitle mb-2">Uploaded Videos</h6>
+                  
+                </div>
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="card text-bg-secondary mb-3">
+                <div class="card-body">
+                  <h5 class="display-6">00:03</h5>
+                  <h6 class="card-subtitle mb-2">Avg. Duration</h6>
+                  
+                </div>
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="card text-bg-secondary mb-3">
+                <div class="card-body">
+                  <h5 class="display-6">11</h5>
+                  <h6 class="card-subtitle mb-2">Avg. Spin</h6>
+                  
+                </div>
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="card text-bg-secondary mb-3">
+                <div class="card-body">
+                  <h5 class="display-6">20</h5>
+                  <h6 class="card-subtitle mb-2">Uploaded Videos</h6>
+                  
+                </div>
+              </div>
+            </div>
+
+
+          </div>
+
+     
+      <div class="col-md-6 my-3">
+        <div class="h-100 p-5 bg-body-tertiary border rounded-3">
+          <p class="lead fw-bold">Spatial Orientation</p>
+          <p>
+            <img class="img-fluid" src="{{ url_for('static', filename='assets/images/placeholder_bar.png') }}"/>
+          </p>
+          <button class="btn btn-outline-light" type="button">See More</button>
+        </div>
+      </div>
+
+
+      <div class="col-md-6 my-3">
+        <div class="h-100 p-5 bg-body-tertiary border rounded-3">
+          <p class="lead fw-bold">(Range of Motion) Splits & Backbends</p>
+          <p>
+            <img class="img-fluid" src="{{ url_for('static', filename='assets/images/placeholder_polarplot.png') }}"/>
+          </p>
+        </div>
+      </div>
+
+      <div class="col-md-6 my-3">
+        <div class="h-100 p-5 bg-body-tertiary border rounded-3">
+          <p class="lead fw-bold">(Range of Motion) Left vs. Right</p>
+          <p>
+            <img class="img-fluid" src="{{ url_for('static', filename='assets/images/placeholder_bar.png') }}"/>
+          </p>
+          <button class="btn btn-outline-light" type="button">See More</button>
+        </div>
+      </div>
+
+      <div class="col-md-6 my-3">
+        <div class="h-100 p-5 bg-body-tertiary border rounded-3">
+          <p class="lead fw-bold">(Change of Rate per Beat) Quality Movement</p>
+          <p>
+            <img class="img-fluid" src="{{ url_for('static', filename='assets/images/placeholder_bar.png') }}"/>
+          </p>
+          <button class="btn btn-outline-light" type="button">See More</button>
+        </div>
+      </div>
+
+      <div class="col-md-12 my-3">
+        <h2 class="mb-3">📙 Top Pose Matches</h2>
+        <div class="table-responsive small">
+          <table class="table table-striped table-sm">
+            <thead>
+              <tr>
+                <th scope="col">Pose Name</th>
+                <th scope="col">Category</th>
+                <th scope="col">Reference</th>
+                <th scope="col">Unique Video Ids</th>
+                <th scope="col">Total Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Pole Walk</td>
+                <td>Beginner</td>
+                <td>Source Image | 3d Object | 2d Object | Instructions </td>
+                <td>5</td>
+                <td>15</td>
+              </tr>
+              <tr>
+                <td>Windwill</td>
+                <td>Beginner</td>
+                <td>Source Image | 3d Object | 2d Object | Instructions </td>
+                <td>5</td>
+                <td>15</td>
+              </tr>
+              <tr>
+                <td>Piroutte</td>
+                <td>Beginner</td>
+                <td>Source Image | 3d Object | 2d Object | Instructions </td>
+                <td>5</td>
+                <td>15</td>
+              </tr>
+              
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      
+      
+    </div>
+
+    
+
+  </div>
+
+
+</div>
+</div>
+{% endblock %}
