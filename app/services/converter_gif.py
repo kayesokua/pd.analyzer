@@ -1,10 +1,12 @@
 import os
 import imageio
 
-def create_gif_from_images(image_folder, gif_path):
-    images = []
-    for file_name in sorted(os.listdir(image_folder)):
-        if file_name.endswith('.png'):
-            file_path = os.path.join(image_folder, file_name)
-            images.append(imageio.imread(file_path))
-    imageio.mimsave(gif_path, images, duration=500, loop=0)
+def create_gif_from_folder(input_dir):
+    image_files = sorted([f for f in os.listdir(input_dir) if f.endswith('.png')])
+    gif_frames = []
+    for file in image_files:
+        full_path = os.path.join(input_dir, file)
+        gif_frames.append(imageio.imread(full_path))
+
+    gif_path = os.path.join(input_dir, 'animated.gif')
+    imageio.mimsave(gif_path, gif_frames, duration=100, loop=0)  # duration in seconds
