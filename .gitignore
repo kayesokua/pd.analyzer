@@ -58,3 +58,4 @@ docs/resources/*
 draft.ipynb
 
 *.env
+*.gif
