@@ -6,7 +6,7 @@ pd.analyzer is a work-in-progress application designed to bring the power of dat
 
 1. Dance Analysis Services
 2. Static Pole Dance Dataset
-![Sample Pose Data Visualization, Carousel Grip](https://ibb.co/fpTNg6w)
+![Sample Pose Data Visualization, Carousel Grip](https://ibb.co/fpTNg6w) 
 
 Route for downloading dataset: `http://127.0.0.1:5000/dataset`
 
