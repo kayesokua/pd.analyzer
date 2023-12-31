@@ -3,21 +3,18 @@
 {% block content %}
 <section class="py-5 text-center container">
   <div class="row py-lg-5">
-    <div class="col-lg-6 col-md-8 mx-auto">
-      <h1 class="fw-light">Pole Dance Poses 3D Dataset</h1>
+    <div class="col-lg-8 col-md-8 mx-auto">
+      <h1 class="fw-light">Static Pole Dance Poses Dataset</h1>
       <p class="lead text-body-secondary">
-        Pole dance combines strength, flexibility, and artistic expression. This dataset encapsulates the complexity of
-        the art by providing detailed 3D representations of pole dance poses. Each data point in our repository
-        translates physical prowess into digital form, allowing for an unprecedented exploration of this dynamic
-        discipline.
-
+        {{ total }} common pole dance poses with spatial landmarks and angle heuristics for your model
       </p>
-      <p><a href="{{url_for('main.get_pose_dictionary_table')}}">Download Raw Data</a></p>
+      <p><a href="{{url_for('main.get_pose_dictionary_table')}}">Download .CSV</a>
+      | Download 2D Plots | Download 3D Plots</p>
     </div>
   </div>
 </section>
 
-<div class="album py-5 bg-body-tertiary">
+<div class="album py-5">
   <div class="container">
 
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
@@ -31,8 +28,16 @@
             <p class="card-text">{{ posename }} | {{ orientation }} | {{ category }} </p>
             <div class="d-flex justify-content-between align-items-center">
               <div class="btn-group">
-                <button type="button" class="btn btn-sm btn-outline-secondary">View 2D</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary">View Original</button>
+
+                <a href="javascript:void(0);" onclick="window.open('{{ url_for('main.serve_plot2d_object', category=category, image=image) }}', 
+                        'newwindow', 'width=600,height=400'); return false;" class="btn btn-sm btn-outline-secondary">
+                  2D Plot
+                </a>
+
+                <a href="javascript:void(0);" onclick="window.open('{{ url_for('main.serve_annotated_image', category=category, image=image) }}', 
+                        'newwindow', 'width=600,height=400'); return false;" class="btn btn-sm btn-outline-secondary">
+                  Sourced Image
+                </a>
               </div>
             </div>
           </div>
@@ -40,7 +45,19 @@
       </div>
       {% endfor %}
 
+        <ul class="pagination">
+          prev {{ prev_url }}
+          next {{ next_url }}
+            {% if prev_url %}
+                <li class="page-item"><a class="page-link" href="{{ prev_url }}">Previous</a></li>
+            {% endif %}
+            {% if next_url %}
+                <li class="page-item"><a class="page-link" href="{{ next_url }}">Next</a></li>
+            {% endif %}
+        </ul>
+
     </div>
   </div>
 </div>
 {% endblock %}
+

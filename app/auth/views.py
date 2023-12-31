@@ -23,8 +23,8 @@ def before_request():
 @auth.route('/unconfirmed')
 def unconfirmed():
     if current_user.is_anonymous or current_user.confirmed:
-        return redirect(url_for('main.index'))
-    return render_template('auth/unconfirmed.html')
+        return redirect(url_for('main.index_test'))
+    return render_template('auth/unconfirmed.html', page=request.path, page_title="Unconfirmed User")
 
 
 @auth.route('/login', methods=['GET', 'POST'])
@@ -36,10 +36,10 @@ def login():
             login_user(user, form.remember_me.data)
             next = request.args.get('next')
             if next is None or not next.startswith('/'):
-                next = url_for('main.index')
+                next = url_for('main.index_test')
             return redirect(next)
         flash('Invalid email or password.')
-    return render_template('auth/login.html', form=form)
+    return render_template('layout_form_basic.html', form=form, page=request.path, page_title="Log In")
 
 
 @auth.route('/logout')
@@ -64,7 +64,7 @@ def register():
                    'auth/email/confirm', user=user, token=token)
         flash('A confirmation email has been sent to you by email.')
         return redirect(url_for('auth.login'))
-    return render_template('auth/register.html', form=form)
+    return render_template('layout_form_basic.html', form=form, page=request.path, page_title="Register")
 
 
 @auth.route('/confirm/<token>')
@@ -103,7 +103,7 @@ def change_password():
             return redirect(url_for('main.index'))
         else:
             flash('Invalid password.')
-    return render_template("auth/change_password.html", form=form)
+    return render_template("layout_form_basic.html", form=form, page_title='Change Password', page=request.path)
 
 
 @auth.route('/reset', methods=['GET', 'POST'])
@@ -121,7 +121,7 @@ def password_reset_request():
         flash('An email with instructions to reset your password has been '
               'sent to you.')
         return redirect(url_for('auth.login'))
-    return render_template('auth/reset_password.html', form=form)
+    return render_template("layout_form_basic.html", form=form, page_title='Reset Password', page=request.path)
 
 
 @auth.route('/reset/<token>', methods=['GET', 'POST'])
@@ -136,8 +136,7 @@ def password_reset(token):
             return redirect(url_for('auth.login'))
         else:
             return redirect(url_for('main.index'))
-    return render_template('auth/reset_password.html', form=form)
-
+    return render_template("layout_form_basic.html", form=form, page_title='Reset Password Token', page=request.path)
 
 @auth.route('/change_email', methods=['GET', 'POST'])
 @login_required
@@ -155,8 +154,7 @@ def change_email_request():
             return redirect(url_for('main.index'))
         else:
             flash('Invalid email or password.')
-    return render_template("auth/change_email.html", form=form)
-
+    return render_template("layout_form_basic.html", form=form, page_title='Change Email', page=request.path)
 
 @auth.route('/change_email/<token>')
 @login_required

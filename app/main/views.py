@@ -14,14 +14,14 @@ from ..services.pose_landmarker import *
 from ..services.pose_recognition import *
 from ..services.data_visualization import *
 
-@main.route('/', methods=['GET', 'POST'])
+@main.route('/test', methods=['GET', 'POST'])
 def index():
     form = VideoPostForm()
     if current_user.can(Permission.WRITE) and form.validate_on_submit():
         post = Post(body=form.body.data, author=current_user._get_current_object())
         db.session.add(post)
         db.session.commit()
-        return redirect(url_for('.index'))
+        return redirect(url_for('.index_test'))
     page = request.args.get('page', 1, type=int)
     show_followed = False
     if current_user.is_authenticated:
@@ -34,16 +34,28 @@ def index():
         page=page, per_page=current_app.config['PDAPP_POSTS_PER_PAGE'],
         error_out=False)
     posts = pagination.items
-    return render_template('index.html', form=form, posts=posts,
-                           show_followed=show_followed, pagination=pagination)
+    return render_template('custom/layout_masonry.html', form=form, posts=posts,
+                           show_followed=show_followed, pagination=pagination, page=request.path)
     
-@main.route('/videos/<author_id>/<post_id>', methods=['GET'])
-def serve_uploaded_video():
-    data_directory = os.path.abspath(os.path.join(current_app.root_path, '..', 'data', 'uploads', 'user0'))
-    return send_from_directory(data_directory, 'default1.mp4')
-
+@main.route('/', methods=['GET'])
+def index_test():
+    page = request.args.get('page', 1, type=int)
+    show_followed = False
+    if current_user.is_authenticated:
+        show_followed = bool(request.cookies.get('show_followed', ''))
+    if show_followed:
+        query = current_user.followed_posts
+    else:
+        query = Post.query
+    pagination = query.order_by(Post.last_updated_on.desc()).paginate(
+        page=page, per_page=current_app.config['PDAPP_POSTS_PER_PAGE'],
+        error_out=False)
+    posts = pagination.items
+    return render_template('custom/layout_masonry.html', page=request.path, posts=posts, show_followed=show_followed, pagination=pagination)
+    
 @main.route('/upload', methods=['GET','POST'])
-def user_upload():
+@login_required
+def upload_dance_video():
     form = VideoPostForm()
     if current_user.can(Permission.WRITE) and form.validate_on_submit():
         post = Post(author=current_user, title=form.title.data, body=form.body.data)
@@ -93,9 +105,10 @@ def user_upload():
         flash('Successfully uploaded!')
         return redirect(url_for('dashboard.individual_report',post_id=post.id))
     else:
-        return render_template('landing.html', form=form, page=request.path)
+        return render_template('layout_form_basic.html', form=form, page=request.path, page_title="Upload Your Dance Video")
 
 @main.route('/user/<username>')
+@login_required
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
     page = request.args.get('page', 1, type=int)
@@ -103,8 +116,8 @@ def user(username):
         page=page, per_page=current_app.config['PDAPP_POSTS_PER_PAGE'],
         error_out=False)
     posts = pagination.items
-    return render_template('user.html', user=user, posts=posts,
-                           pagination=pagination)
+    return render_template('custom/layout_user.html', user=user, posts=posts,
+                           pagination=pagination, page=request.path)
 
 @main.route('/edit-profile', methods=['GET', 'POST'])
 @login_required
@@ -121,7 +134,7 @@ def edit_profile():
     form.name.data = current_user.name
     form.location.data = current_user.location
     form.about_me.data = current_user.about_me
-    return render_template('edit_profile.html', form=form)
+    return render_template('layout_form_basic.html', form=form, page_title='Edit Profile', page=request.path)
 
 @main.route('/edit-profile/<uuid:id>', methods=['GET', 'POST'])
 @login_required
@@ -148,7 +161,8 @@ def edit_profile_admin(id):
     form.name.data = user.name
     form.location.data = user.location
     form.about_me.data = user.about_me
-    return render_template('edit_profile.html', form=form, user=user)
+    
+    return render_template('layout_form_basic.html', form=form, page=request.path, page_title="Edit User Profile", user=user)
 
 @main.route('/post/<uuid:id>', methods=['GET', 'POST'])
 def post(id):
@@ -189,7 +203,7 @@ def edit(id):
         flash('The post has been updated.')
         return redirect(url_for('.post', id=post.id))
     form.body.data = post.body
-    return render_template('edit_post.html', form=form)
+    return render_template('layout_form_basic.html', form=form, page=request.path, page_title="Edit Post")
 
 
 @main.route('/follow/<username>')
@@ -199,7 +213,7 @@ def follow(username):
     user = User.query.filter_by(username=username).first()
     if user is None:
         flash('Invalid user.')
-        return redirect(url_for('.index'))
+        return redirect(url_for('.index_test'))
     if current_user.is_following(user):
         flash('You are already following this user.')
         return redirect(url_for('.user', username=username))
@@ -216,7 +230,7 @@ def unfollow(username):
     user = User.query.filter_by(username=username).first()
     if user is None:
         flash('Invalid user.')
-        return redirect(url_for('.index'))
+        return redirect(url_for('.index_test'))
     if not current_user.is_following(user):
         flash('You are not following this user.')
         return redirect(url_for('.user', username=username))
@@ -231,16 +245,16 @@ def followers(username):
     user = User.query.filter_by(username=username).first()
     if user is None:
         flash('Invalid user.')
-        return redirect(url_for('.index'))
+        return redirect(url_for('.index_test'))
     page = request.args.get('page', 1, type=int)
     pagination = user.followers.paginate(
         page=page, per_page=current_app.config['PDAPP_FOLLOWERS_PER_PAGE'],
         error_out=False)
     follows = [{'user': item.follower, 'timestamp': item.timestamp}
                for item in pagination.items]
-    return render_template('followers.html', user=user, title="Followers of",
+    return render_template('layout_followers.html', user=user, title="Followers of",
                            endpoint='.followers', pagination=pagination,
-                           follows=follows)
+                           follows=follows, page=request.path, page_title="Your Followers")
 
 
 @main.route('/followed_by/<username>')
@@ -248,17 +262,16 @@ def followed_by(username):
     user = User.query.filter_by(username=username).first()
     if user is None:
         flash('Invalid user.')
-        return redirect(url_for('.index'))
+        return redirect(url_for('.index_test'))
     page = request.args.get('page', 1, type=int)
     pagination = user.followed.paginate(
         page=page, per_page=current_app.config['PDAPP_FOLLOWERS_PER_PAGE'],
         error_out=False)
     follows = [{'user': item.followed, 'timestamp': item.timestamp}
                for item in pagination.items]
-    return render_template('followers.html', user=user, title="Followed by",
+    return render_template('layout_followers.html', user=user, title="Followed by",
                            endpoint='.followed_by', pagination=pagination,
-                           follows=follows)
-
+                           follows=follows, page=request.path, page_title="Who Follows You")
 
 @main.route('/all')
 @login_required
@@ -307,26 +320,37 @@ def moderate_disable(id):
     db.session.commit()
     return redirect(url_for('.moderate',page=request.args.get('page', 1, type=int)))
 
-@main.route('/dictionary')
+@main.route('/dataset')
 def get_pose_dictionary():
-    rel_path = os.path.join('data', 'external', 'pdictionary.csv')
+    page = request.args.get('page', 1, type=int)
+    per_page = current_app.config['PDAPP_POSES_PER_PAGE']
+    rel_path = os.path.join('data', 'external', 'pdictionary_3d.csv')
     abs_path = os.path.abspath(os.path.join(current_app.root_path, '..', rel_path))
+
     try:
         df = pd.read_csv(abs_path)
-        posenames = df['posename'].tolist()
-        orientations = df['orientation'].tolist()
-        categories = df['category'].tolist()
-        images = df['filename'].tolist()
+        total_poses = len(df)
+        df_paginated = df.iloc[(page-1)*per_page:page*per_page]  # Paginated data
+
+        posenames = df_paginated['posename'].tolist()
+        orientations = df_paginated['orientation'].tolist()
+        categories = df_paginated['category'].tolist()
+        images = df_paginated['filename'].tolist()
         gif_images = [image[:-4] + '.gif' if image.endswith('.png') else image for image in images]
+        
         poses = zip(posenames, orientations, categories, images, gif_images)
-        current_path = os.path.abspath(os.path.join(current_app.root_path,'..', 'data', 'external'))
-        return render_template('dictionary/gallery.html', poses=poses,  current_path=current_path, page=request.path,  page_title="Poses Dictionary")
+        
+        total_pages = (total_poses) // per_page
+        next_url = url_for('main.get_pose_dictionary', page=page+1) if page < total_pages else None
+        prev_url = url_for('main.get_pose_dictionary', page=page-1) if page > 1 else None
+
+        return render_template('dictionary/gallery.html', poses=poses, prev=prev_url, next=next_url, total=total_poses, page=request.path, per_page=per_page, page_title="Poses Dictionary")
     except Exception as e:
         return f"An error occurred: {e}"
 
-@main.route('/dictionary/table')
+@main.route('/dataset/download')
 def get_pose_dictionary_table():
-    rel_path = os.path.join('data', 'external', 'pdictionary.csv')
+    rel_path = os.path.join('data', 'external', 'pdictionary_3d.csv')
     abs_path = os.path.abspath(os.path.join(current_app.root_path, '..', rel_path))
     try:
         df = pd.read_csv(abs_path)
@@ -334,10 +358,34 @@ def get_pose_dictionary_table():
         return render_template('dictionary/table.html',results=pose_results, page=request.path, page_title="Pose Dictionary (Raw)")
     except Exception as e:
         return f"An error occurred: {e}"
+
+
+### Serving Files
     
+@main.route('/videos/<author_id>/<post_id>', methods=['GET'])
+def serve_uploaded_video(author_id,post_id):
+    video_filename = str(post_id) + ".mp4"
+    print(video_filename)
+    data_directory = os.path.abspath(os.path.join(current_app.root_path, '..', 'data', 'uploads'))
+    
+    rel_filepath = os.path.join(author_id,video_filename)
+    print(rel_filepath)
+    return send_from_directory(data_directory, rel_filepath)
+
 @main.route('/dictionary/<category>/plot3d/animated/<gif>', methods=['GET'])
 def serve_plot3d_object(category,gif):
     data_directory = os.path.abspath(os.path.join(current_app.root_path, '..', 'data', 'external'))
     rel_filepath = os.path.join(category,'plot3d','animated',gif)
     return send_from_directory(data_directory,rel_filepath)
 
+@main.route('/dictionary/<category>/plot2d/<image>', methods=['GET'])
+def serve_plot2d_object(category,image):
+    data_directory = os.path.abspath(os.path.join(current_app.root_path, '..', 'data', 'external'))
+    rel_filepath = os.path.join(category,'plot2d',image)
+    return send_from_directory(data_directory,rel_filepath)
+
+@main.route('/dictionary/<category>/annotated/<image>', methods=['GET'])
+def serve_annotated_image(category,image):
+    data_directory = os.path.abspath(os.path.join(current_app.root_path, '..', 'data', 'external'))
+    rel_filepath = os.path.join(category,'annotated',image)
+    return send_from_directory(data_directory,rel_filepath)

@@ -1,0 +1,38 @@
+{% extends "custom/base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block content %}
+
+<div class="container col-md-8 px-4 py-5" style="min-height:500px">
+
+    <h1 class="display-6 text-body-emphasis lh-1 mb-3">{{ page_title }} ({{ user.username }})</h1>
+
+    <table class="table table-responsive table-hover followers">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Since</th>
+            </tr>
+        </thead>
+        {% for follow in follows %}
+        {% if follow.user != user %}
+        <tr>
+            <td>
+                <a href="{{ url_for('.user', username = follow.user.username) }}">
+                    <img class="img-rounded" src="{{ follow.user.gravatar(size=32) }}">
+                    {{ follow.user.username }}
+                </a>
+            </td>
+            <td>{{ moment(follow.timestamp).format('L') }}</td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </table>
+
+    <div class="pagination">
+        {{ macros.pagination_widget(pagination, endpoint, username = user.username) }}
+    </div>
+</div>
+
+
+{% endblock %}

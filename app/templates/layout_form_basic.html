@@ -1,0 +1,22 @@
+{% extends 'custom/base.html' %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+
+<div class="container col-md-8 px-4 py-5">
+    <div class="row align-items-center g-5 py-5">
+        <h1 class="display-6 text-body-emphasis lh-1 mb-3">{{ page_title }}</h1>
+        {{ wtf.quick_form(form) }}
+
+        {% if page.startswith('/auth/login') %}
+        <br>
+        <p>Forgot your password? <a href="{{ url_for('auth.password_reset_request') }}">Click here to reset it</a>.</p>
+        <p>New user? <a href="{{ url_for('auth.register') }}">Click here to register</a>.</p>
+
+        {% endif %}
+
+    </div>
+</div>
+
+
+{% endblock %}

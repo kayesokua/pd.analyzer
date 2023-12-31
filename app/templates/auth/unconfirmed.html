@@ -1,13 +1,9 @@
-{% extends "base.html" %}
+{% extends "custom/base.html" %}
 
-{% block title %}PD.Analyzer - Confirm your account{% endblock %}
-
-{% block page_content %}
-<div class="page-header">
-    <h1>
-        Hello, {{ current_user.username }}!
-    </h1>
-    <h3>You have not confirmed your account yet.</h3>
+{% block content %}
+<div class="container col-md-8 px-4 py-5" style="min-height:500px">
+    <h1 class="display-6 text-body-emphasis lh-1 mb-3">Hello, {{ current_user.username }}!</h1>
+    <p class="lead">You have not confirmed your account yet.</p>
     <p>
         Before you can access this site you need to confirm your account.
         Check your inbox, you should have received an email with a confirmation link.
@@ -17,4 +13,5 @@
         <a href="{{ url_for('auth.resend_confirmation') }}">Click here</a>
     </p>
 </div>
+
 {% endblock %}
