@@ -2,6 +2,15 @@
 
 pd.analyzer is a work-in-progress application designed to bring the power of data science and machine learning to the art of pole dancing. It aims to create a comprehensive framework for analyzing, summarizing, and enhancing pole dance performances using advanced computational techniques.
 
+## Features
+
+1. Dance Analysis Services
+2. Static Pole Dance Dataset
+![Sample Pose Data Visualization, Carousel Grip](https://ibb.co/fpTNg6w)
+
+Route for downloading dataset: `http://127.0.0.1:5000/dataset`
+
+
 ## Structure
 
 ```
