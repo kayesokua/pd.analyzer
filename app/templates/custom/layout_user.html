@@ -87,7 +87,7 @@
                         <a href="{{ url_for('.user', username=post.author.username) }}">{{ post.author.username }}</a>
                         posted {{ moment(post.last_updated_on).fromNow() }}
                     </p>
-                    <p class="card-text">{{ post.body | truncate(100, True) }}</p>
+                    <p class="card-text">{{ post.description | truncate(100, True) }}</p>
                 </div>
 
                 {% if current_user == post.author %}

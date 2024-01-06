@@ -39,10 +39,10 @@ def create_app(config_name):
 
         if not user_exists:
             from app.services import fake
-            fake.users(count=10)
+            fake.users(count=5)
 
         if not post_exists:
-            fake.posts(count=30)
+            fake.posts(count=5)
 
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)

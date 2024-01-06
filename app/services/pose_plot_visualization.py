@@ -98,91 +98,91 @@ def plot_2d_coordinates(df, index, output_dir):
     
     return plot_filename
 
-def plot_3d_coordinates(df, idx, output_dir):
+def plot_3d_coordinates(df, idx, output_dir, azim):
     row = df.iloc[idx]
     posename = os.path.basename(row['filepath_abs'])
     orientation = row['orientation']
     
     coordinates = get_3d_coordinates_row_entry(row)
 
-    for azim in range(0, 360, 60):
-        fig = plt.figure(figsize=(12, 12))
-        ax = fig.add_subplot(111, projection='3d')
-        ax.set_title(f"pd.analyzer | {posename} | {orientation}")
+    #for azim in range(0, 360, 60):[
+    fig = plt.figure(figsize=(12, 12))
+    ax = fig.add_subplot(111, projection='3d')
+    ax.set_title(f"pd.analyzer | {posename} | {orientation}")
         
-        xs = [point[0] for point in coordinates]
-        ys = [point[1] for point in coordinates]
-        zs = [point[2] for point in coordinates]
+    xs = [point[0] for point in coordinates]
+    ys = [point[1] for point in coordinates]
+    zs = [point[2] for point in coordinates]
 
-        head_torso_connections = [(0, 1),(13, 14),(0, 13),(0, 14)]
-        torso_connections = [(2, 3),(3, 4),(4, 2)]
+    head_torso_connections = [(0, 1),(13, 14),(0, 13),(0, 14)]
+    torso_connections = [(2, 3),(3, 4),(4, 2)]
         
-        right_hand_connections = [(6, 15), (6, 16), (15, 16)]
-        right_shoulder_connections = [(2, 5), (5, 6)]
-        right_leg_connections = [(4, 9), (9, 10)]
-        right_foot_connections = [(10, 20), (10, 21),(20,21)]
+    right_hand_connections = [(6, 15), (6, 16), (15, 16)]
+    right_shoulder_connections = [(2, 5), (5, 6)]
+    right_leg_connections = [(4, 9), (9, 10)]
+    right_foot_connections = [(10, 20), (10, 21),(20,21)]
         
-        left_hand_connections = [(8, 17), (8, 18), (17, 18)]
-        left_shoulder_connections = [(3, 7), (7, 8)]
-        left_leg_connections = [(4, 11), (11, 12)]  
-        left_foot_connections = [(12, 22), (12, 23),(22,23)]
+    left_hand_connections = [(8, 17), (8, 18), (17, 18)]
+    left_shoulder_connections = [(3, 7), (7, 8)]
+    left_leg_connections = [(4, 11), (11, 12)]  
+    left_foot_connections = [(12, 22), (12, 23),(22,23)]
         
-        ax.scatter(xs, zs, ys, color='black')
+    ax.scatter(xs, zs, ys, color='black')
 
-        def draw_connections(connections, color):
-            for connection in connections:
-                x_conn = [xs[connection[0]], xs[connection[1]]]
-                y_conn = [ys[connection[0]], ys[connection[1]]]
-                z_conn = [zs[connection[0]], zs[connection[1]]]
-                ax.plot(x_conn, z_conn, y_conn, color=color, linewidth=2)
+    def draw_connections(connections, color):
+        for connection in connections:
+            x_conn = [xs[connection[0]], xs[connection[1]]]
+            y_conn = [ys[connection[0]], ys[connection[1]]]
+            z_conn = [zs[connection[0]], zs[connection[1]]]
+            ax.plot(x_conn, z_conn, y_conn, color=color, linewidth=2)
 
-        draw_connections(head_torso_connections, 'darkseagreen')
-        draw_connections(torso_connections, 'darkolivegreen')
+    draw_connections(head_torso_connections, 'darkseagreen')
+    draw_connections(torso_connections, 'darkolivegreen')
         
-        draw_connections(right_hand_connections, 'plum')
-        draw_connections(right_shoulder_connections, 'plum')
-        draw_connections(right_leg_connections, 'palevioletred')
-        draw_connections(right_foot_connections, 'palevioletred')
+    draw_connections(right_hand_connections, 'plum')
+    draw_connections(right_shoulder_connections, 'plum')
+    draw_connections(right_leg_connections, 'palevioletred')
+    draw_connections(right_foot_connections, 'palevioletred')
         
-        draw_connections(left_hand_connections, 'skyblue')
-        draw_connections(left_shoulder_connections, 'skyblue')
-        draw_connections(left_leg_connections, 'steelblue')
-        draw_connections(left_foot_connections, 'steelblue')
+    draw_connections(left_hand_connections, 'skyblue')
+    draw_connections(left_shoulder_connections, 'skyblue')
+    draw_connections(left_leg_connections, 'steelblue')
+    draw_connections(left_foot_connections, 'steelblue')
 
-        ax.set_xlabel("")
-        ax.set_ylabel("")
-        ax.set_zlabel("")
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+    ax.set_zlabel("")
 
-        ax.set_xlim(np.min(xs)-0.01,np.max(xs)+0.01)
-        ax.set_ylim(np.min(zs)-0.01,np.max(zs)+0.01)
-        ax.set_zlim(np.min(ys)-0.01,np.max(ys)+0.01)
+    ax.set_xlim(np.min(xs)-0.01,np.max(xs)+0.01)
+    ax.set_ylim(np.min(zs)-0.01,np.max(zs)+0.01)
+    ax.set_zlim(np.min(ys)-0.01,np.max(ys)+0.01)
 
-        ax.invert_xaxis()
-        ax.invert_yaxis()
-        ax.invert_zaxis()
+    ax.invert_xaxis()
+    ax.invert_yaxis()
+    ax.invert_zaxis()
 
-        ax.set_xticks(np.arange(np.min(xs)-0.1, np.max(xs)+0.1, 0.1))
-        ax.set_yticks(np.arange(np.min(zs)-0.1, np.max(zs)+0.1, 0.1))
-        ax.set_zticks(np.arange(np.min(ys)-0.1, np.max(ys)+0.1, 0.1))
+    ax.set_xticks(np.arange(np.min(xs)-0.1, np.max(xs)+0.1, 0.1))
+    ax.set_yticks(np.arange(np.min(zs)-0.1, np.max(zs)+0.1, 0.1))
+    ax.set_zticks(np.arange(np.min(ys)-0.1, np.max(ys)+0.1, 0.1))
 
-        ax.set_xticklabels([])
-        ax.set_yticklabels([])
-        ax.set_zticklabels([])
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    ax.set_zticklabels([])
 
-        ax.set_facecolor('white')
+    ax.set_facecolor('white')
 
-        ax.xaxis._axinfo["grid"]['color'] = (0.3, 0.3, 0.3, 0.1)
-        ax.yaxis._axinfo["grid"]['color'] = (0.3, 0.3, 0.3, 0.1)
-        ax.zaxis._axinfo["grid"]['color'] = (0.3, 0.3, 0.3, 0.1)
+    ax.xaxis._axinfo["grid"]['color'] = (0.3, 0.3, 0.3, 0.1)
+    ax.yaxis._axinfo["grid"]['color'] = (0.3, 0.3, 0.3, 0.1)
+    ax.zaxis._axinfo["grid"]['color'] = (0.3, 0.3, 0.3, 0.1)
 
-        ax.view_init(elev=10, azim=azim)
+    ax.view_init(elev=10, azim=azim)
         
-        # Save the plot for the current azimuth angle
-        os.makedirs(output_dir, exist_ok=True)    
-        plot_filename = f"{posename[:-4]}_azim_{azim:03d}.png"
-        plot_filepath = os.path.join(output_dir, plot_filename)
-        plt.savefig(plot_filepath)
-        plt.close(fig)
+     # Save the plot for the current azimuth angle
+    os.makedirs(output_dir, exist_ok=True)    
+    plot_filename = f"{posename[:-4]}_azim_{azim:03d}.png"
+    plot_filepath = os.path.join(output_dir, plot_filename)
+    plt.savefig(plot_filepath)
+    plt.close(fig)
     
 def get_3d_coordinates_row_entry(row):
     coordinates = [

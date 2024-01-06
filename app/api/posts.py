@@ -49,7 +49,7 @@ def edit_post(id):
     if g.current_user != post.author and \
             not g.current_user.can(Permission.ADMIN):
         return forbidden('Insufficient permissions')
-    post.body = request.json.get('body', post.body)
+    post.description = request.json.get('description', post.description)
     db.session.add(post)
     db.session.commit()
     return jsonify(post.to_json())
