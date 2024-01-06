@@ -89,10 +89,16 @@ class User(UserMixin, db.Model):
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default=False)
+    
+    disabled = db.Column(db.Boolean, default=False) # When user deactivates account
+    disabled_on = db.Column(db.Boolean, default=False) # When user is disabled for 30 days, personal information is hashed, not deleted
+    
     name = db.Column(db.String(64))
     location = db.Column(db.String(64))
-    about_me = db.Column(db.Text())
+    about_me = db.Column(db.String(1000))
+    
     member_since = db.Column(db.DateTime(), default=datetime.utcnow)
+    
     last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
     avatar_hash = db.Column(db.String(32))
     posts = db.relationship('Post', backref='author', lazy='dynamic')
@@ -289,37 +295,43 @@ def load_user(user_id):
 class Post(db.Model):
     __tablename__ = 'posts'
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    title = db.Column(db.String(128), default="None")
-    body = db.Column(db.Text)
-    body_html = db.Column(db.Text)
-    video_url = db.Column(db.String(256), default="data/processed/*")
-    processed_data_dir = db.Column(db.String(256), default="data/processed/id/results.csv")
-    video_timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    upload_timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    last_updated_on = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    title = db.Column(db.String(128), default="empty")
+    description = db.Column(db.String(5000), default="empty description")
+       
+    video_filename = db.Column(db.String(256), default="default.mp4")
+    video_processed_completed = db.Column(db.Boolean, default=False)
+    
+    view_permission_public = db.Column(db.Boolean, default=False) # By default, post is not public
+    view_permission_followers = db.Column(db.Boolean, default=True) # By default, post is available to followers
+    
+    
+    video_timestamp = db.Column(db.DateTime, default=datetime.utcnow) # Timestamp dictated by user
+    
+    upload_timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow) # Timestamp when it was uploaded
+    last_updated_on = db.Column(db.DateTime, index=True, default=datetime.utcnow) # Timestamp when it was last revised
+    
+    deleted_on = db.Column(db.DateTime, nullable=True) # Timestamp when it was last deleted
+    deleted_from_view = db.Column(db.Boolean, default=False) #By default, post is not deleted from user view
+    deleted_from_bucket = db.Column(db.Boolean, default=False) #14 days after deleted from view, it will be deleted from bucket
+    
     author_id = db.Column(db.String(36), db.ForeignKey('users.id'))
     comments = db.relationship('Comment', backref='post', lazy='dynamic')
-
-    @staticmethod
-    def on_changed_body(target, value, oldvalue, initiator):
-        allowed_tags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
-                        'em', 'i', 'li', 'ol', 'pre', 'strong', 'ul',
-                        'h1', 'h2', 'h3', 'p']
-        target.body_html = bleach.linkify(bleach.clean(
-            markdown(value, output_format='html'),
-            tags=allowed_tags, strip=True))
 
     def to_json(self):
         json_post = {
             'url': url_for('api.get_post', id=self.id),
             'title': self.title,
-            'body': self.body,
-            'body_html': self.body_html,
-            'video_url': self.video_url,
-            'processed_data_url': self.processed_data_url,
+            'description': self.description,
+            'video_filename': self.video_filename,
+            'video_processed_completed': self.video_processed_completed,
+            'view_permission_public' : self.view_permission_public,
+            'view_permission_followers' : self.view_permission_followers,
             'video_timestamp': self.video_timestamp,
             'upload_timestamp': self.upload_timestamp,
             'last_updated_on': self.last_updated_on,
+            'deleted_on' : self.deleted_on,
+            'deleted_from_view' : self.deleted_from_view,
+            'deleted_from_bucket' : self.deleted_from_bucket,
             'author_url': url_for('api.get_user', id=self.author_id),
             'comments_url': url_for('api.get_post_comments', id=self.id),
             'comment_count': self.comments.count()
@@ -328,37 +340,25 @@ class Post(db.Model):
 
     @staticmethod
     def from_json(json_post):
-        body = json_post.get('body')
+        body = json_post.get('description')
         if body is None or body == '':
             raise ValidationError('post does not have a body')
         return Post(body=body)
 
-db.event.listen(Post.body, 'set', Post.on_changed_body)
-
 class Comment(db.Model):
     __tablename__ = 'comments'
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    body = db.Column(db.Text)
-    body_html = db.Column(db.Text)
+    body = db.Column(db.String(100))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     disabled = db.Column(db.Boolean)
     author_id = db.Column(db.String(36), db.ForeignKey('users.id'))
     post_id = db.Column(db.String(36), db.ForeignKey('posts.id'))
-
-    @staticmethod
-    def on_changed_body(target, value, oldvalue, initiator):
-        allowed_tags = ['a', 'abbr', 'acronym', 'b', 'code', 'em', 'i',
-                        'strong']
-        target.body_html = bleach.linkify(bleach.clean(
-            markdown(value, output_format='html'),
-            tags=allowed_tags, strip=True))
 
     def to_json(self):
         json_comment = {
             'url': url_for('api.get_comment', id=self.id),
             'post_url': url_for('api.get_post', id=self.post_id),
             'body': self.body,
-            'body_html': self.body_html,
             'timestamp': self.timestamp,
             'author_url': url_for('api.get_user', id=self.author_id),
         }
@@ -370,5 +370,3 @@ class Comment(db.Model):
         if body is None or body == '':
             raise ValidationError('comment does not have a body')
         return Comment(body=body)
-
-db.event.listen(Comment.body, 'set', Comment.on_changed_body)
