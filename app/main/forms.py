@@ -52,7 +52,7 @@ class EditProfileAdminForm(FlaskForm):
 
 class VideoPostForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(max=128)])
-    body = TextAreaField('Description')
+    description = TextAreaField('Description')
     video = FileField('Upload Video', validators=[FileRequired(),FileAllowed(['mp4'], 'MP4 videos only!')])
     video_timestamp = DateTimeLocalField('Date and Time', format='%Y-%m-%dT%H:%M', validators=[DataRequired()])
     submit = SubmitField('Submit')

@@ -34,18 +34,11 @@ def posts(count=30):
         
         post = Post(
             title=fake.sentence(),
-            body=fake.text(),
-            body_html=fake.text(),
-            video_url="default1.mp4",
+            description=fake.text(),
             video_timestamp=timestamp,
             upload_timestamp=timestamp,
             last_updated_on=timestamp,
             author=user
         )
-        db.session.add(post)
-    db.session.commit()
-
-    for post in Post.query.order_by(Post.id.desc()).limit(count).all():
-        post.processed_data_dir = f"data/processed/{post.author.id}/{post.id}/"
         db.session.add(post)
     db.session.commit()
