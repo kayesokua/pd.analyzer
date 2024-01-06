@@ -9,7 +9,7 @@
         <div class="post-content">
             <div class="post-date">{{ moment(post.last_updated_on).fromNow() }}</div>
             <div class="post-author"><a href="{{ url_for('.user', username=post.author.username) }}">{{ post.author.username }}</a></div>
-            {% if post.video_url %}
+            {% if post.video_filename %}
              <figure class="figure">
                 <video class="figure-img img-fluid rounded" src="{{ url_for('main.serve_uploaded_video', author_id=post.author_id, post_id=post.id) }}">
                 </video>
@@ -18,10 +18,8 @@
             {% endif %}
 
             <div class="post-body">
-                {% if post.body_html %}
-                    {{ post.body_html | safe }}
-                {% else %}
-                    {{ post.body }}
+                {% if post.description %}
+                    {{ post.description }} 
                 {% endif %}
             </div>
             <div class="post-footer">

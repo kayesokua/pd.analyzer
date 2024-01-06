@@ -8,17 +8,11 @@ from ..models.base import Permission, Role, User, Post, Comment
 from ..decorators import admin_required, permission_required
 from werkzeug.utils import secure_filename
 
-from ..services.converter_video import *
-from ..services.converter_gif import *
-from ..services.pose_landmarker import *
-from ..services.pose_recognition import *
-from ..services.data_visualization import *
-
 @main.route('/test', methods=['GET', 'POST'])
 def index():
     form = VideoPostForm()
     if current_user.can(Permission.WRITE) and form.validate_on_submit():
-        post = Post(body=form.body.data, author=current_user._get_current_object())
+        post = Post(body=form.description.data, author=current_user._get_current_object())
         db.session.add(post)
         db.session.commit()
         return redirect(url_for('.index_test'))
@@ -59,55 +53,77 @@ def upload_dance_video():
     form = VideoPostForm()
     if current_user.can(Permission.WRITE) and form.validate_on_submit():
         
-        post = Post(author=current_user, title=form.title.data, body=form.body.data)
+        post = Post(author=current_user, title=form.title.data, description=form.description.data)
         db.session.add(post)
         db.session.commit()
         
-        # Directory to store the video for the author
-        rel_video_dir = os.path.join('data', 'uploads', str(current_user.id))
-        rel_processed_data_dir = os.path.join('data', 'processed', str(current_user.id),str(post.id))
-        rel_processed_plot_data_dir = os.path.join('data', 'processed', str(current_user.id),str(post.id),'plot')
+        ###### Preprocessing
+        # Step 0: Save Video with metadata first
         
-        abs_video_path = os.path.abspath(os.path.join(current_app.root_path, '..', rel_video_dir))
-        abs_video_filepath = os.path.join(abs_video_path,f'{post.id}.mp4')
+        ## Make sure user uploads path exists
+        rel_user_uploads_path = os.path.join('data', 'uploads', str(current_user.id))
+        abs_user_uploads_path = os.path.abspath(os.path.join(current_app.root_path, '..', rel_user_uploads_path))
+        os.makedirs(abs_user_uploads_path, exist_ok=True)
         
-        abs_processed_data_dir = os.path.abspath(os.path.join(current_app.root_path, '..', rel_processed_data_dir))
-        abs_processed_plot_data_dir = os.path.abspath(os.path.join(current_app.root_path, '..', rel_processed_plot_data_dir))
-        
-        os.makedirs(abs_video_path, exist_ok=True)
-        os.makedirs(abs_processed_data_dir, exist_ok=True)
-        os.makedirs(abs_processed_plot_data_dir, exist_ok=True)
-        
-        # Save the video file
+        ## Save the video
+        abs_user_post_video_path = os.path.join(abs_user_uploads_path,f'{post.id}.mp4')
         video_file = form.video.data
-        video_file.save(abs_video_filepath)
+        video_file.save(abs_user_post_video_path)
         
-        post.video_url = os.path.join(rel_video_dir, f'{str(post.id)}.mp4')
-        post.processed_data_dir = rel_processed_data_dir
-        
+        # Update video url data
+        post.video_filename = os.path.join(f'{str(post.id)}.mp4')
         db.session.commit()
         
-        # Start Procesing
-        decompose_video_to_frames(abs_video_filepath, abs_processed_data_dir)
-        print("Processed video!")
-
+        ###### Start Service
+        
+        # Step 1: Decompose to Frames
+        from ..services.converter_video import decompose_video_to_frames
+        rel_user_post_processed_path = os.path.join('data', 'processed', str(current_user.id), str(post.id))
+        abs_user_post_processed_path = os.path.abspath(os.path.join(current_app.root_path, '..', rel_user_post_processed_path))
+        os.makedirs(abs_user_post_processed_path, exist_ok=True)
+        decompose_video_to_frames(abs_user_post_video_path, abs_user_post_processed_path)
+        print(f"{post.id}.mp4 successfully decomposed to frames!")
+        
+        # Step 2: Pose Landmarker 
+        from ..services.pose_landmarker import create_pose_landmark_dictionary
         model_path = os.path.join(current_app.root_path, 'models', 'ml', 'pose_landmarker.task')
         
-        pose_features_df = create_pose_landmark_dictionary(abs_processed_data_dir, model_path)
-        pose_features_df.to_csv(f'{abs_processed_data_dir}/results.csv',index=False)
-        print("Concatenated results!")
+        pose_norm_data,pose_world_data = create_pose_landmark_dictionary(rel_user_post_processed_path, model_path)
+        
+        print(f"Successfully landmarked {len(pose_norm_data)} images. Results stored in {rel_user_post_processed_path}/pose_norm_data.csv.")
+        print(f"Successfully landmarked {len(pose_world_data)} images. Results stored in {rel_user_post_processed_path}/pose_norm_data.csv.")        
+        
+        # Step 3: Create Plot Visuals
+        from ..services.pose_plot_visualization import plot_2d_coordinates, plot_3d_coordinates
             
-        for index, _ in pose_features_df.iterrows():
-            basic_plot_pose_dictionary_entry(pose_features_df, index, abs_processed_plot_data_dir)
+        for index, _ in pose_norm_data.iterrows():
+            plot_2d_coordinates(pose_norm_data, index, os.path.join(abs_user_post_processed_path, 'plot2d'))
+            plot_3d_coordinates(pose_world_data, index, os.path.join(abs_user_post_processed_path, 'plot3d'), azim=120)
         
-        print("Plots created!")
-        abs_plot_gif_path = os.path.join(abs_processed_data_dir, 'animation.gif')
+        print(f"Successfully plotted images for {index} frames. Results stored in {rel_user_post_processed_path}")
         
-        create_gif_from_images(abs_processed_plot_data_dir, abs_plot_gif_path)
-        print("GIF created!")
+        from ..services.converter_gif import create_gif_from_folder
         
-        flash('Successfully uploaded!')
-        return redirect(url_for('dashboard.individual_report',post_id=post.id))
+        # Step 4A: Create 2D Plot Animation
+        rel_user_post_plot2d_path = os.path.join(rel_user_post_processed_path,'plot2d')
+        abs_user_post_plot2d_path = os.path.abspath(os.path.join(current_app.root_path, '..', rel_user_post_plot2d_path))
+        
+        create_gif_from_folder(abs_user_post_plot2d_path, duration=1000)
+        print(f"{rel_user_post_plot2d_path}/animated.mp4 created!")
+        
+         # Step 4B: Create 3D Plot Animation
+        rel_user_post_plot3d_path = os.path.join(rel_user_post_processed_path,'plot3d')
+        abs_user_post_plot3d_path = os.path.abspath(os.path.join(current_app.root_path, '..', rel_user_post_plot3d_path))
+        
+        create_gif_from_folder(abs_user_post_plot3d_path, duration=1000)
+        print(f"{rel_user_post_plot3d_path}/animated.mp4 created!")
+        
+        post.video_processed_completed = True
+        db.session.commit()
+        
+        flash('Successfully uploaded! Please see dashboard now..')
+        
+        return redirect(url_for('dashboard.index'))
     else:
         return render_template('layout_form_basic.html', form=form, page=request.path, page_title="Upload Your Dance Video")
 
@@ -201,12 +217,12 @@ def edit(id):
         abort(403)
     form = VideoPostForm()
     if form.validate_on_submit():
-        post.body = form.body.data
+        post.description = form.description.data
         db.session.add(post)
         db.session.commit()
         flash('The post has been updated.')
         return redirect(url_for('.post', id=post.id))
-    form.body.data = post.body
+    form.description.data = post.description
     return render_template('layout_form_basic.html', form=form, page=request.path, page_title="Edit Post")
 
 
