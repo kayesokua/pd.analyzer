@@ -299,6 +299,7 @@ class Post(db.Model):
     description = db.Column(db.String(5000), default="empty description")
        
     video_filename = db.Column(db.String(256), default="default.mp4")
+    video_properties = db.Column(db.String(256), default="{'fps':0,'frames':0,'duration':0}")
     video_processed_completed = db.Column(db.Boolean, default=False)
     
     view_permission_public = db.Column(db.Boolean, default=False) # By default, post is not public
@@ -323,6 +324,7 @@ class Post(db.Model):
             'title': self.title,
             'description': self.description,
             'video_filename': self.video_filename,
+            'video_properties': self.video_properties,
             'video_processed_completed': self.video_processed_completed,
             'view_permission_public' : self.view_permission_public,
             'view_permission_followers' : self.view_permission_followers,

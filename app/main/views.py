@@ -7,6 +7,7 @@ from .. import db
 from ..models.base import Permission, Role, User, Post, Comment
 from ..decorators import admin_required, permission_required
 from werkzeug.utils import secure_filename
+import pandas as pd
 
 @main.route('/test', methods=['GET', 'POST'])
 def index():
@@ -77,11 +78,17 @@ def upload_dance_video():
         ###### Start Service
         
         # Step 1: Decompose to Frames
-        from ..services.converter_video import decompose_video_to_frames
+        from ..services.converter_video import decompose_video_to_frames, get_video_properties
         rel_user_post_processed_path = os.path.join('data', 'processed', str(current_user.id), str(post.id))
         abs_user_post_processed_path = os.path.abspath(os.path.join(current_app.root_path, '..', rel_user_post_processed_path))
         os.makedirs(abs_user_post_processed_path, exist_ok=True)
+        
         decompose_video_to_frames(abs_user_post_video_path, abs_user_post_processed_path)
+        properties = get_video_properties(abs_user_post_video_path)
+        
+        post.video_properties = str(properties)
+        db.session.commit()
+        
         print(f"{post.id}.mp4 successfully decomposed to frames!")
         
         # Step 2: Pose Landmarker 
@@ -108,14 +115,14 @@ def upload_dance_video():
         rel_user_post_plot2d_path = os.path.join(rel_user_post_processed_path,'plot2d')
         abs_user_post_plot2d_path = os.path.abspath(os.path.join(current_app.root_path, '..', rel_user_post_plot2d_path))
         
-        create_gif_from_folder(abs_user_post_plot2d_path, duration=1000)
+        create_gif_from_folder(abs_user_post_plot2d_path, duration=500)
         print(f"{rel_user_post_plot2d_path}/animated.mp4 created!")
         
          # Step 4B: Create 3D Plot Animation
         rel_user_post_plot3d_path = os.path.join(rel_user_post_processed_path,'plot3d')
         abs_user_post_plot3d_path = os.path.abspath(os.path.join(current_app.root_path, '..', rel_user_post_plot3d_path))
         
-        create_gif_from_folder(abs_user_post_plot3d_path, duration=1000)
+        create_gif_from_folder(abs_user_post_plot3d_path, duration=500)
         print(f"{rel_user_post_plot3d_path}/animated.mp4 created!")
         
         post.video_processed_completed = True
@@ -123,7 +130,7 @@ def upload_dance_video():
         
         flash('Successfully uploaded! Please see dashboard now..')
         
-        return redirect(url_for('dashboard.index'))
+        return redirect(url_for('dashboard.report_page', id=post.id))
     else:
         return render_template('layout_form_basic.html', form=form, page=request.path, page_title="Upload Your Dance Video")
 
@@ -317,8 +324,7 @@ def moderate():
         page=page, per_page=current_app.config['PDAPP_COMMENTS_PER_PAGE'],
         error_out=False)
     comments = pagination.items
-    return render_template('moderate.html', comments=comments,
-                           pagination=pagination, page=page)
+    return render_template('moderate.html', comments=comments, pagination=pagination, page=page)
 
 @main.route('/moderate/enable/<uuid:id>')
 @login_required
@@ -386,26 +392,67 @@ def get_pose_dictionary_table():
 def serve_uploaded_video(author_id,post_id):
     video_filename = str(post_id) + ".mp4"
     print(video_filename)
-    data_directory = os.path.abspath(os.path.join(current_app.root_path, '..', 'data', 'uploads'))
-    
+    data_directory = os.path.abspath(os.path.join(current_app.root_path, '..', 'data', 'uploads'))    
     rel_filepath = os.path.join(author_id,video_filename)
-    print(rel_filepath)
     return send_from_directory(data_directory, rel_filepath)
 
+@main.route('/animation/pose-norm-data/<author_id>/<post_id>', methods=['GET'])
+def serve_processed_animated_2d(author_id,post_id):
+    filename = 'animated.gif'
+    data_directory = os.path.abspath(os.path.join(current_app.root_path, '..', 'data', 'processed',author_id,post_id,'plot2d'))    
+    return send_from_directory(data_directory, filename)
+
+@main.route('/animation/pose-world-data/<author_id>/<post_id>', methods=['GET'])
+def serve_processed_animated_3d(author_id,post_id):
+    filename = 'animated.gif'
+    data_directory = os.path.abspath(os.path.join(current_app.root_path, '..', 'data', 'processed',author_id,post_id,'plot3d'))    
+    return send_from_directory(data_directory, filename)
+
 @main.route('/dictionary/<category>/plot3d/animated/<gif>', methods=['GET'])
-def serve_plot3d_object(category,gif):
+def serve_dict_plot3d_object(category,gif):
     data_directory = os.path.abspath(os.path.join(current_app.root_path, '..', 'data', 'external'))
     rel_filepath = os.path.join(category,'plot3d','animated',gif)
     return send_from_directory(data_directory,rel_filepath)
 
 @main.route('/dictionary/<category>/plot2d/<image>', methods=['GET'])
-def serve_plot2d_object(category,image):
+def serve_dict_plot2d_object(category,image):
     data_directory = os.path.abspath(os.path.join(current_app.root_path, '..', 'data', 'external'))
     rel_filepath = os.path.join(category,'plot2d',image)
     return send_from_directory(data_directory,rel_filepath)
 
+
+
 @main.route('/dictionary/<category>/annotated/<image>', methods=['GET'])
-def serve_annotated_image(category,image):
+def serve_dict_annotated_image(category,image):
     data_directory = os.path.abspath(os.path.join(current_app.root_path, '..', 'data', 'external'))
     rel_filepath = os.path.join(category,'annotated',image)
     return send_from_directory(data_directory,rel_filepath)
+
+@main.route('/dictionary/<category>/plot3d/<filename>', methods=['GET'])
+def serve_dict_plot3d_image(category,filename):
+    filedir = str(filename[:-4])
+    data_directory = os.path.abspath(os.path.join(current_app.root_path, '..', 'data', 'external'))
+    rel_filepath = os.path.join(category,'plot3d',filedir,'plot_azim_120.png')
+    return send_from_directory(data_directory,rel_filepath)
+
+@main.route('/dictionary/<category>/plot2d/<filename>', methods=['GET'])
+def serve_dict_plot2d_image(category,filename):
+    data_directory = os.path.abspath(os.path.join(current_app.root_path, '..', 'data', 'external'))
+    rel_filepath = os.path.join(category,'plot2d',filename)
+    return send_from_directory(data_directory,rel_filepath)
+
+@main.route('/annotated/<author_id>/<post_id>/<user_image>', methods=['GET'])
+def serve_user_annotated_image(author_id,post_id,user_image):
+    data_directory = os.path.abspath(os.path.join(current_app.root_path, '..', 'data', 'processed',author_id,post_id,'annotated'))      
+    return send_from_directory(data_directory,user_image)
+
+@main.route('/annotated/2d/<author_id>/<post_id>/<user_image>', methods=['GET'])
+def serve_user_annotated_plot2d_image(author_id,post_id,user_image):
+    data_directory = os.path.abspath(os.path.join(current_app.root_path, '..', 'data', 'processed',author_id,post_id,'plot2d'))      
+    return send_from_directory(data_directory,user_image)
+
+@main.route('/annotated/3d/<author_id>/<post_id>/<user_image>', methods=['GET'])
+def serve_user_annotated_plot3d_image(author_id,post_id,user_image):
+    filepath = str(user_image[:-4]) + '_azim_120.png'
+    data_directory = os.path.abspath(os.path.join(current_app.root_path, '..', 'data', 'processed',author_id,post_id,'plot3d'))      
+    return send_from_directory(data_directory,filepath)

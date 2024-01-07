@@ -61,12 +61,16 @@ def create_pose_landmark_dictionary(new_frames_path, model_path):
                 
                 if detection_result:
                     annotated_image = draw_landmarks_on_image(image_bgr, detection_result)
-                    annotated_image_rgb = cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB)
+                    width, height = int(annotated_image.shape[1] * 0.4), int(annotated_image.shape[0] * 0.4)
+                    resized_image = cv2.resize(annotated_image, (width, height), interpolation=cv2.INTER_AREA)
+                    annotated_image_rgb = cv2.cvtColor(resized_image, cv2.COLOR_BGR2RGB)
                     annotated_image_path = os.path.join(annotated_dir,os.path.basename(image_file_path))
                     cv2.imwrite(annotated_image_path, annotated_image_rgb)
+                    frame_path = os.path.basename(image_file_path)
                                     
                     for pose_landmarks in detection_result.pose_landmarks:
-                        pose_info = {'filepath_abs': image_file_path}
+                        pose_info = {'filepath_abs': image_file_path,
+                                     'frame_name': frame_path[:-4]}
                         
                         for idx,landmark in enumerate(pose_landmarks):
                             idx_str = str(idx).zfill(2)
@@ -77,7 +81,8 @@ def create_pose_landmark_dictionary(new_frames_path, model_path):
                         pose_data.append(pose_info)
                         
                     for pose_world_landmarks in detection_result.pose_world_landmarks:
-                        pose_info = {'filepath_abs': image_file_path}
+                        pose_info = {'filepath_abs': image_file_path,
+                                     'frame_name': frame_path[:-4]}
                         
                         for idx,landmark in enumerate(pose_world_landmarks):
                             idx_str = str(idx).zfill(2)
@@ -113,17 +118,20 @@ def create_pose_landmark_dictionary(new_frames_path, model_path):
         pose_2d_features2_df = calculate_pose_angle_difference(pose_2d_features_df)
 
         # Save Results
-        pose_2d_features2_df.to_csv(f'{new_frames_path}/pose_world_norm.csv',index=False)
+        pose_2d_features2_df.to_csv(f'{new_frames_path}/pose_norm_data.csv',index=False)
 
         # Spatial Orientation Feature
         pose_3d_df = pose_world_df.apply(lambda row: condense_pole_dictionary_3d(row, x_columns, y_columns, z_columns), axis=1)
         pose_3d_df['orientation'] = pose_3d_df.apply(classify_row_orientation, axis=1)
         
+        # Face Orientation Feature
+        pose_3d_df['face'] = pose_3d_df.apply(classify_row_face, axis=1)
+        
         # 3D Pose Angles Feature
         pose_3d_features_df = compute_connected_joints_angles_3d(pose_3d_df)
 
         # Rate of Change Features
-        pose_3d_features2_df = compute_connected_joints_angles_3d(pose_3d_features_df)
+        pose_3d_features2_df = calculate_pose_angle_difference(pose_3d_features_df)
 
         # Save Results
         pose_3d_features2_df.to_csv(f'{new_frames_path}/pose_world_data.csv',index=False)

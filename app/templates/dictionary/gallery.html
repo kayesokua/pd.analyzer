@@ -22,22 +22,24 @@
       {% for posename, orientation, category, image, gif in poses %}
       <div class="col">
         <div class="card shadow-sm">
-          <img src="{{ url_for('main.serve_plot3d_object', category=category, gif=gif) }}" class="img-fluid"
+          <img src="{{ url_for('main.serve_dict_plot3d_object', category=category, gif=gif) }}" class="img-fluid"
             alt="{{posename}}">
           <div class="card-body">
             <p class="card-text">{{ posename }} | {{ orientation }} | {{ category }} </p>
             <div class="d-flex justify-content-between align-items-center">
               <div class="btn-group">
 
-                <a href="javascript:void(0);" onclick="window.open('{{ url_for('main.serve_plot2d_object', category=category, image=image) }}', 
+                <a href="javascript:void(0);" onclick="window.open('{{ url_for('main.serve_dict_plot2d_object', category=category, image=image) }}', 
                         'newwindow', 'width=600,height=400'); return false;" class="btn btn-sm btn-outline-secondary">
                   2D Plot
                 </a>
 
-                <a href="javascript:void(0);" onclick="window.open('{{ url_for('main.serve_annotated_image', category=category, image=image) }}', 
+                <a href="javascript:void(0);" onclick="window.open('{{ url_for('main.serve_dict_annotated_image', category=category, image=image) }}', 
                         'newwindow', 'width=600,height=400'); return false;" class="btn btn-sm btn-outline-secondary">
                   Sourced Image
                 </a>
+
+              {{ image }}
               </div>
             </div>
           </div>

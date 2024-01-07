@@ -1,0 +1,81 @@
+{% extends 'custom/base.html' %}
+
+{% block content %}
+<div class="container py-5">
+
+    {% for post in posts %}
+    <h3 class="display-6">{{post.title}} </h3>
+    <p>{{ post.description }}</p>
+    <p>
+        <a class="btn btn-dark" href="{{ url_for('dashboard.report_page', id=post.id) }}">Main Report</a>
+        <a class="btn btn-dark" href="{{ url_for('dashboard.report_page_display_raw_data', id=post.id) }}">See Pose Data</a>
+    </p>
+
+
+
+
+    <hr class="my-3">
+
+    <div class="row">
+        <div class="col-12 mb-5">
+            <span class="my-3">Change view </span>
+            <div class="float-sm-end">
+                <select class="form-select" id="plotTypeSelect" aria-label="select_comparison_image"
+                    onchange="updateComparisonImage()" style="width:200px;">
+                    <option value="plotF" selected>Video Frames</option>
+                    <option value="plot2D">2D Plot</option>
+                    <option value="plot3d">3D Plot</option>
+                </select>
+                <script>
+                    function updateComparisonImage() {
+                        var plotType = document.getElementById("plotTypeSelect").value;
+                        var images = document.getElementById("imageContainer").getElementsByClassName("plotImage");
+
+                        for (var i = 0; i < images.length; i++) {
+                            images[i].src = images[i].getAttribute('data-' + plotType);
+                        }
+                    }
+                </script>
+            </div>
+        </div>
+        <div class="col-12 mb-5">
+            <div class="row">
+            {% for index, soln_avg, user_image, pose_image, posename, category in closest_matches %}
+            
+                <!-- User Image -->
+                <div class="col-3 mb-3">
+                    <div class="border">
+                        <p class="text-center">{{ user_image }} | score: {{ soln_avg | round(1, 'floor') }}</p>
+                        <!-- Other content -->
+                        <img class="img-fluid plotImage"
+                            data-plotf="{{ url_for('main.serve_user_annotated_image', author_id=post.author_id, post_id=post.id, user_image=user_image) }}"
+                            data-plot2d="{{ url_for('main.serve_user_annotated_plot2d_image', author_id=post.author_id, post_id=post.id, user_image=user_image) }}"
+                            data-plot3d="{{ url_for('main.serve_user_annotated_plot3d_image', author_id=post.author_id, post_id=post.id, user_image=user_image) }}"
+                            src="{{ url_for('main.serve_user_annotated_image', author_id=post.author_id, post_id=post.id, user_image=user_image) }}"
+                            alt="{{ user_image }}">
+                    </div>
+                </div>
+                <!-- Dictionary Image -->
+                <div class="col-3 mb-3">
+                    <div class="border">
+                        <p class="text-center">{{ category }} | {{ posename }}</p>
+                        <!-- Other content -->
+                        <img class="img-fluid plotImage"
+                            data-plotf="{{ url_for('main.serve_dict_annotated_image', category=category, image=pose_image) }}"
+                            data-plot2d="{{ url_for('main.serve_dict_plot2d_image', category=category, filename=pose_image) }}"
+                            data-plot3d="{{ url_for('main.serve_dict_plot3d_image', category=category, filename=pose_image) }}"
+                            src="{{ url_for('main.serve_dict_annotated_image', category=category, image=pose_image) }}"
+                            alt="{{ posename }}">
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+           
+        </div>
+    </div>
+
+</div>
+{% endfor %}
+</div>
+
+{% endblock %}

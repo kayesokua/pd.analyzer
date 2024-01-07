@@ -7,8 +7,8 @@ def decompose_video_to_frames(input_video_path, output_processed_data_dir):
         print(f"Error: Could not open video at path {input_video_path}")
         return False
 
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    interval = int(0.2 * fps)  # 200ms interval
+    fps = cap.get(cv2.CAP_PROP_FPS)    
+    interval = int(0.2 * fps) 
     frame_count = 0
     image_count = 0
 
@@ -24,5 +24,23 @@ def decompose_video_to_frames(input_video_path, output_processed_data_dir):
             break
 
     cap.release()
+    
     print(f"Processed {image_count} frames from the video.")
+    
     return True
+
+def get_video_properties(input_video_path):
+    cap = cv2.VideoCapture(input_video_path)
+    if not cap.isOpened():
+        print(f"Error: Could not open video at path {input_video_path}")
+        return False
+    
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    
+    properties = {
+        "fps": fps,
+        "frames": cap.get(cv2.CAP_PROP_FRAME_COUNT),
+        "duration": frame_count / fps
+    }
+    return properties

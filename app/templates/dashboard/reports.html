@@ -7,40 +7,30 @@
   {% include "custom/_quicknav.html" %}
   <hr class="my-5">
       <div class="col-md-12 my-3">
-        <h2 class="mb-3">📈 Individual Reports </h2>
+        
         <div class="table-responsive small">
           <table class="table table-striped table-sm">
             <thead>
               <tr>
-                <th scope="col">Upload Date</th>
+                <th scope="col">Upload On</th>
                 <th scope="col">Title</th>
-                <th scope="col">Duration</th>
-                <th scope="col">Spins Detected</th>
-                <th scope="col">Report Actions</th>
+                <th scope="col">Properties</th>
+                <th scope="col">Last Updated</th>
+                <th scope="col">🔗</th>
               </tr>
             </thead>
+        
             <tbody>
+              {% for post in posts %}
               <tr>
-                <td>2023.12.25 11:00:00</td>
-                <td>Vestibulum condimentum ullamcorper justo</td>
-                <td>00:03:49</td>
-                <td>15</td>
-                <td>View | Delete</td>
+                <td>{{ post.upload_timestamp }}</td>
+                <td>{{ post.title }}</td>
+                <td>{{ post.video_properties }}</td>
+                <td>{{ post.last_updated_on }}</td>
+                <td><a href="{{ url_for('dashboard.report_page',id=post.id )}}">View Report Page</a></td>
               </tr>
-              <tr>
-                <td>2023.12.24 11:00:00</td>
-                <td>Vestibulum condimentum ullamcorper justo</td>
-                <td>00:03:21</td>
-                <td>10</td>
-                <td>View | Delete</td>
-              </tr>
-              <tr>
-                <td>2023.12.23 11:00:00</td>
-                <td>Vestibulum condimentum ullamcorper justo</td>
-                <td>00:03:15</td>
-                <td>15</td>
-                <td>View | Delete</td>
-              </tr>
+              {% endfor %}
+              
               
             </tbody>
           </table>
