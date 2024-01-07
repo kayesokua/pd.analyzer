@@ -4,13 +4,16 @@ pd.analyzer is a work-in-progress application designed to bring the power of dat
 
 ## Features
 
-1. Dance Analysis Services
+1. Dance Analysis Services & Dashboard
+![Sample Dashboard View](https://i.ibb.co/g3crywn/Screenshot-2024-01-07-at-03-36-38.png)
+
+`http://127.0.0.1:5000/dashboard/<username>`
+
 2. Static Pole Dance Dataset
 
 ![Sample Pose Data Visualization, Carousel Grip](https://i.ibb.co/mCDsjFM/plot-azim-050.png) 
 
-Route for downloading dataset: `http://127.0.0.1:5000/dataset`
-
+Route for downloading dataset: `http://127.0.0.1:5000/dataset` 
 
 ## Structure
 
@@ -43,4 +46,5 @@ Python dependencies are listed in `requirements/`. They include Flask for web fr
 
 ## Resources
 1. Project Template from [Miguel Grinberg's Flask Web Development, 2nd Edition](https://github.com/miguelgrinberg/flasky/)
-2. https://github.com/google/mediapipe
+2. [MediaPipe | Google for Developers](https://github.com/google/mediapipe)
+3. [Plotly Python Graphing Library](https://plotly.com/python/)

@@ -10,10 +10,64 @@ import plotly
 import plotly.express as px
 import json
 
-@dashboard.route('/', methods=['GET'])
+from ..services.data_visualization import plot_histogram_spatial_orienttion,plot_range_of_motion_arc, get_table_min_max_rom
+from ..services.report_calculation import get_spin_count
+    
+@dashboard.route('/<username>', methods=['GET'])
 @login_required
-def index():
-    return render_template("dashboard/index.html", page=request.path)
+def index(username):
+    user = User.query.filter_by(username=username).first_or_404() 
+    posts = user.posts.order_by(Post.last_updated_on.desc())
+    aggregated_data = []
+    total_frames = 0
+    total_duration = 0
+    total_spins = 0
+    for post in posts:
+        properties_str = post.video_properties
+        properties_str_reformatted = properties_str.replace("'", '"')
+        properties_json = json.loads(properties_str_reformatted)
+        
+        rel_user_post_processed_path = os.path.join('data', 'processed', str(post.author_id), str(post.id))
+        abs_user_post_processed_path = os.path.abspath(os.path.join(current_app.root_path, '..', rel_user_post_processed_path))
+        pose_world_data_path = os.path.join(abs_user_post_processed_path, 'pose_world_data.csv')    
+        
+        pose_world_data_df = pd.read_csv(pose_world_data_path)
+        
+        # Get All Data
+        aggregated_data.append(pose_world_data_df)
+        total_frames += len(pose_world_data_df)
+        total_duration += properties_json['duration']
+        total_spins += get_spin_count(pose_world_data_df)
+    
+    combined_df = pd.concat(aggregated_data, ignore_index=True)
+
+    # Spatial Orientation Chart
+    fig_spatial_orientation = plot_histogram_spatial_orienttion(combined_df, total_duration)
+    plotly_so = json.dumps(fig_spatial_orientation, cls=plotly.utils.PlotlyJSONEncoder)
+    
+    # Plot ROM Arc
+    fig_rom_arc = plot_range_of_motion_arc(combined_df)
+    plotly_rom_arc = json.dumps(fig_rom_arc, cls=plotly.utils.PlotlyJSONEncoder)
+    
+    # Get Min and Max ROM Table
+    fig_range_of_motion = get_table_min_max_rom(combined_df)
+    plotly_rom_table = json.dumps(fig_range_of_motion, cls=plotly.utils.PlotlyJSONEncoder)
+        
+    hours, remainder = divmod(int(total_duration), 3600)
+    minutes, seconds = divmod(remainder, 60)
+    
+    total_duration_str = f"{hours:02}:{minutes:02}:{seconds:02}"
+    
+    return render_template('dashboard/index.html',
+                           user=user,
+                           posts=posts,
+                           plotly_so=plotly_so,
+                           plotly_rom_table=plotly_rom_table,
+                           plotly_rom_arc=plotly_rom_arc,
+                           total_frames=total_frames,
+                           total_duration=total_duration_str,
+                           total_spins=total_spins,
+                           page=request.path)
 
 @dashboard.route('/reports/<username>', methods=['GET'])
 @login_required
@@ -48,8 +102,6 @@ def report_page(id):
     # Display Tabular Data
     pose_world_data = pose_world_data_df.to_dict(orient='records')
     
-    from ..services.data_visualization import plot_histogram_spatial_orienttion,plot_range_of_motion_arc, get_table_min_max_rom
-
     # Spatial Orientation Chart
     fig_spatial_orientation = plot_histogram_spatial_orienttion(pose_world_data_df, total_duration)
     plotly_so = json.dumps(fig_spatial_orientation, cls=plotly.utils.PlotlyJSONEncoder)
@@ -62,7 +114,7 @@ def report_page(id):
     fig_range_of_motion = get_table_min_max_rom(pose_world_data_df)
     plotly_rom_table = json.dumps(fig_range_of_motion, cls=plotly.utils.PlotlyJSONEncoder)
     
-    from ..services.report_calculation import get_spin_count
+    
     total_spins = get_spin_count(pose_world_data_df)
     
     return render_template('dashboard/report_individual.html',

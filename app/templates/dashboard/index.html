@@ -15,121 +15,108 @@
 
           <div class="row">
             <div class="col-3">
-              <div class="card text-bg-secondary mb-3">
+              <div class="card text-bg-light mb-3">
                 <div class="card-body">
-                  <h5 class="display-6">20</h5>
-                  <h6 class="card-subtitle mb-2">Uploaded Videos</h6>
+                  <h5 class="display-6">{{ posts.count() }}</h5>
+                  <h6 class="card-subtitle mb-2">Uploaded</h6>
                   
                 </div>
               </div>
             </div>
             <div class="col-3">
-              <div class="card text-bg-secondary mb-3">
+              <div class="card text-bg-light mb-3">
                 <div class="card-body">
-                  <h5 class="display-6">00:03</h5>
-                  <h6 class="card-subtitle mb-2">Avg. Duration</h6>
+                  <h5 class="display-6">{{ total_duration }}</h5>
+                  <h6 class="card-subtitle mb-2">Dancing Duration</h6>
                   
                 </div>
               </div>
             </div>
             <div class="col-3">
-              <div class="card text-bg-secondary mb-3">
+              <div class="card text-bg-light mb-3">
                 <div class="card-body">
-                  <h5 class="display-6">11</h5>
-                  <h6 class="card-subtitle mb-2">Avg. Spin</h6>
+                  <h5 class="display-6">{{ total_frames }}</h5>
+                  <h6 class="card-subtitle mb-2">Frames Landmarked</h6>
                   
                 </div>
               </div>
             </div>
             <div class="col-3">
-              <div class="card text-bg-secondary mb-3">
+              <div class="card text-bg-light mb-3">
                 <div class="card-body">
-                  <h5 class="display-6">20</h5>
-                  <h6 class="card-subtitle mb-2">Uploaded Videos</h6>
+                  <h5 class="display-6">{{ total_spins }}</h5>
+                  <h6 class="card-subtitle mb-2">Spins</h6>
                   
                 </div>
               </div>
+            </div>
+
+            <div class="col-md-6">
+              <p class="mt-5 lead text-center">Spatial Orientation</p>
+              <div class="border">
+                <div id="plotly_so"></div>
+                <script>
+                  var plotly_so = {{ plotly_so | safe }};
+                  Plotly.newPlot('plotly_so', plotly_so);
+                </script>
+              </div>
+            </div>
+    
+    
+            <div class="col-md-6">
+              <p class="mt-5 lead text-center">Range of Motion Arc</p>
+              <div class="border">
+                <div id="plotly_rom_arc"></div>
+                <script>
+                  var plotly_rom_arc = {{ plotly_rom_arc | safe }};
+                  Plotly.newPlot('plotly_rom_arc', plotly_rom_arc);
+                </script>
+              </div>
+            </div>
+    
+            <div class="col-md-12 my-3">
+              <p class="mt-5 lead text-center">Rate of Change</p>
+              <div class="border">
+                <div id="plotly_rom_table"></div>
+    
+                <script>
+                  var plotly_rom_table = {{ plotly_rom_table | safe }};
+                  Plotly.newPlot('plotly_rom_table', plotly_rom_table);
+                </script>
+              </div>
+    
             </div>
 
 
           </div>
 
      
-      <div class="col-md-6 my-3">
-        <div class="h-100 p-5 bg-body-tertiary border rounded-3">
-          <p class="lead fw-bold">Spatial Orientation</p>
-          <p>
-            <img class="img-fluid" src="{{ url_for('static', filename='assets/images/placeholder_bar.png') }}"/>
-          </p>
-          <button class="btn btn-outline-light" type="button">See More</button>
-        </div>
-      </div>
-
-
-      <div class="col-md-6 my-3">
-        <div class="h-100 p-5 bg-body-tertiary border rounded-3">
-          <p class="lead fw-bold">(Range of Motion) Splits & Backbends</p>
-          <p>
-            <img class="img-fluid" src="{{ url_for('static', filename='assets/images/placeholder_polarplot.png') }}"/>
-          </p>
-        </div>
-      </div>
-
-      <div class="col-md-6 my-3">
-        <div class="h-100 p-5 bg-body-tertiary border rounded-3">
-          <p class="lead fw-bold">(Range of Motion) Left vs. Right</p>
-          <p>
-            <img class="img-fluid" src="{{ url_for('static', filename='assets/images/placeholder_bar.png') }}"/>
-          </p>
-          <button class="btn btn-outline-light" type="button">See More</button>
-        </div>
-      </div>
-
-      <div class="col-md-6 my-3">
-        <div class="h-100 p-5 bg-body-tertiary border rounded-3">
-          <p class="lead fw-bold">(Change of Rate per Beat) Quality Movement</p>
-          <p>
-            <img class="img-fluid" src="{{ url_for('static', filename='assets/images/placeholder_bar.png') }}"/>
-          </p>
-          <button class="btn btn-outline-light" type="button">See More</button>
-        </div>
-      </div>
 
       <div class="col-md-12 my-3">
-        <h2 class="mb-3">📙 Top Pose Matches</h2>
+        <h2 class="mb-3">📽️ Your Reels</h2>
         <div class="table-responsive small">
           <table class="table table-striped table-sm">
             <thead>
               <tr>
-                <th scope="col">Pose Name</th>
-                <th scope="col">Category</th>
-                <th scope="col">Reference</th>
-                <th scope="col">Unique Video Ids</th>
-                <th scope="col">Total Count</th>
+                <th scope="col">Upload On</th>
+                <th scope="col">Title</th>
+                <th scope="col">Properties</th>
+                <th scope="col">Last Updated</th>
+                <th scope="col">🔗</th>
               </tr>
             </thead>
+        
             <tbody>
+              {% for post in posts %}
               <tr>
-                <td>Pole Walk</td>
-                <td>Beginner</td>
-                <td>Source Image | 3d Object | 2d Object | Instructions </td>
-                <td>5</td>
-                <td>15</td>
+                <td>{{ post.upload_timestamp }}</td>
+                <td>{{ post.title }}</td>
+                <td>{{ post.video_properties }}</td>
+                <td>{{ post.last_updated_on }}</td>
+                <td><a href="{{ url_for('dashboard.report_page',id=post.id )}}">View Report Page</a></td>
               </tr>
-              <tr>
-                <td>Windwill</td>
-                <td>Beginner</td>
-                <td>Source Image | 3d Object | 2d Object | Instructions </td>
-                <td>5</td>
-                <td>15</td>
-              </tr>
-              <tr>
-                <td>Piroutte</td>
-                <td>Beginner</td>
-                <td>Source Image | 3d Object | 2d Object | Instructions </td>
-                <td>5</td>
-                <td>15</td>
-              </tr>
+              {% endfor %}
+              
               
             </tbody>
           </table>

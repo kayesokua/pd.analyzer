@@ -1,12 +1,12 @@
-{% extends "base.html" %}
+{% extends "custom/base.html" %}
 {% import "_macros.html" as macros %}
 
-{% block title %}Pd.Analyzer - Comment Moderation{% endblock %}
 
-{% block page_content %}
-<div class="page-header">
-    <h1>Comment Moderation</h1>
-</div>
+{% block content %}
+<div class="container col-md-8 px-4 py-5" style="min-height:500px">
+
+    <h1 class="display-6 text-body-emphasis lh-1 mb-3">{{ page_title }} </h1>
+
 {% set moderate = True %}
 {% include '_comments.html' %}
 {% if pagination %}
@@ -14,4 +14,5 @@
     {{ macros.pagination_widget(pagination, '.moderate') }}
 </div>
 {% endif %}
+</div>
 {% endblock %}

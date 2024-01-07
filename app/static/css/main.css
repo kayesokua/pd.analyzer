@@ -13894,3 +13894,33 @@ fieldset:disabled .btn {
 }
 
 /*# sourceMappingURL=bootstrap.min.css.map */
+
+input#submit {
+    background: #712cf9;
+    color: white;
+    margin-top: 1em;
+}
+
+.form-group {
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+}
+
+input#video {
+    background: #e4e4e4;
+    padding: 0.3em;
+    border-radius: 9px;
+    float: right;
+    width: 100%;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+#loadingSpinner {
+    position: fixed; /* or absolute */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
