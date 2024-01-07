@@ -5,7 +5,7 @@
 
 {% if page.startswith('/dashboard') %}
 <p>
-    <a class="btn btn-outline-secondary" href="{{ url_for('dashboard.index') }}">View Dashboard</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('dashboard.index', username=current_user.username) }}">View Dashboard</a>
     <a class="btn btn-outline-secondary" href="{{ url_for('dashboard.reports_overview', username=current_user.username) }}">Individual Reports</a>
     <a class="btn btn-outline-secondary" href="{{ url_for('main.index_test') }}">Video Home Feed</a>
 </p>
@@ -14,7 +14,7 @@
 <p>
     {% if current_user.can(Permission.WRITE) %}
     <a class="btn btn-dark" href="{{ url_for('main.upload_dance_video') }}">Upload your video</a>
-    <a class="btn btn-outline-secondary" href="{{ url_for('dashboard.index') }}">View Dashboard</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('dashboard.index', username=current_user.username) }}">View Dashboard</a>
     <a class="btn btn-outline-secondary" href="{{ url_for('dashboard.reports_overview', username=current_user.username) }}">View Individual Reports</a>
     <a class="btn btn-outline-secondary" href="{{ url_for('main.edit_profile') }}">Update Profile</a>
     {% endif %}

@@ -9,6 +9,7 @@
     <p>
         <a class="btn btn-dark" href="{{ url_for('dashboard.report_page', id=post.id) }}">Main Report</a>
         <a class="btn btn-dark" href="{{ url_for('dashboard.report_page_display_raw_data', id=post.id) }}">See Pose Data</a>
+        <a class="btn btn-outline-secondary" href="{{ url_for('dashboard.index', username=current_user.username) }}">Dashboard Main</a>
     </p>
 
 
@@ -22,9 +23,10 @@
             <div class="float-sm-end">
                 <select class="form-select" id="plotTypeSelect" aria-label="select_comparison_image"
                     onchange="updateComparisonImage()" style="width:200px;">
-                    <option value="plotF" selected>Video Frames</option>
-                    <option value="plot2D">2D Plot</option>
+                    
+                    <option value="plot2D" selected>2D Plot</option>
                     <option value="plot3d">3D Plot</option>
+                    <option value="plotF">Video Frames</option>
                 </select>
                 <script>
                     function updateComparisonImage() {
@@ -39,32 +41,32 @@
             </div>
         </div>
         <div class="col-12 mb-5">
-            <div class="row">
+            <div class="row" id="imageContainer">
             {% for index, soln_avg, user_image, pose_image, posename, category in closest_matches %}
             
                 <!-- User Image -->
                 <div class="col-3 mb-3">
                     <div class="border">
-                        <p class="text-center">{{ user_image }} | score: {{ soln_avg | round(1, 'floor') }}</p>
+                        <p class="text-center">user frame {{ user_image[:-4] }}</p>
                         <!-- Other content -->
                         <img class="img-fluid plotImage"
                             data-plotf="{{ url_for('main.serve_user_annotated_image', author_id=post.author_id, post_id=post.id, user_image=user_image) }}"
                             data-plot2d="{{ url_for('main.serve_user_annotated_plot2d_image', author_id=post.author_id, post_id=post.id, user_image=user_image) }}"
                             data-plot3d="{{ url_for('main.serve_user_annotated_plot3d_image', author_id=post.author_id, post_id=post.id, user_image=user_image) }}"
-                            src="{{ url_for('main.serve_user_annotated_image', author_id=post.author_id, post_id=post.id, user_image=user_image) }}"
-                            alt="{{ user_image }}">
+                            src="{{ url_for('main.serve_user_annotated_plot2d_image', author_id=post.author_id, post_id=post.id, user_image=user_image) }}"
+                        alt="{{ user_image }}">
                     </div>
                 </div>
                 <!-- Dictionary Image -->
                 <div class="col-3 mb-3">
-                    <div class="border">
-                        <p class="text-center">{{ category }} | {{ posename }}</p>
+                    <div class="border border-danger">
+                        <p class="text-center">score: {{ soln_avg | round(1, 'floor') }}</p>
                         <!-- Other content -->
                         <img class="img-fluid plotImage"
                             data-plotf="{{ url_for('main.serve_dict_annotated_image', category=category, image=pose_image) }}"
                             data-plot2d="{{ url_for('main.serve_dict_plot2d_image', category=category, filename=pose_image) }}"
                             data-plot3d="{{ url_for('main.serve_dict_plot3d_image', category=category, filename=pose_image) }}"
-                            src="{{ url_for('main.serve_dict_annotated_image', category=category, image=pose_image) }}"
+                            src="{{ url_for('main.serve_dict_plot2d_image', category=category, filename=pose_image) }}"
                             alt="{{ posename }}">
                     </div>
                 </div>
