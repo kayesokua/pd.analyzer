@@ -8,8 +8,11 @@ import matplotlib.colors as mcolors
 
 import numpy as np
 
+import plotly.express as px
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
+
+import pandas as pd
 
 def basic_plot_pose_dictionary_entry(df, index, output_dir):
     row = df.iloc[index]
@@ -129,17 +132,21 @@ def scatter_plot_pose_dictionary_entry(df, index):
     # Return the figure
     return fig
 
-def polar_plot_full_choreography(df):
-    # Create subplots in Plotly
-    fig = make_subplots(rows=3, cols=3, specs=[[{'type': 'polar'}]*3]*3,
-                        subplot_titles=['Head to Hip',
-                                        'Right Shoulder to Wrist', 'Right Hip to Foot',
-                                        'Left Shoulder to Wrist', 'Left Hip to Foot'])
+def polar_plot_full_choreography(df, focus):
 
-    # Joint names to plot
-    joint_names = ['a_head_to_hip_diff',
-                   'a_right_shoulder_to_wrist_diff','a_right_hip_to_foot_diff',
-                   'a_left_shoulder_to_wrist_diff','a_left_hip_to_foot_diff',]
+    if focus == 'right_shoulder':
+        joint_names = ['a_right_shoulder_to_wrist','a_right_shoulder_to_elbow','a_right_elbow_to_wrist']
+    elif focus == 'right_roc':
+        joint_names = sorted([col for col in df.columns if col.startswith('a_right') and col.endswith('_diff')])
+    elif focus == 'left':
+        joint_names = sorted([col for col in df.columns if col.startswith('a_left') and not col.endswith('_diff')])
+    elif focus == 'left_roc':
+        joint_names = sorted([col for col in df.columns if col.startswith('a_left') and col.endswith('_diff')])
+    else:
+        joint_names = ['a_head_to_hip_diff','a_right_shoulder_to_wrist_diff','a_right_hip_to_foot_diff','a_left_shoulder_to_wrist_diff','a_left_hip_to_foot_diff',]
+    
+    
+    fig = make_subplots(rows=3, cols=3, specs=[[{'type': 'polar'}]*3]*3,subplot_titles=joint_names)
     
     for i, joint_name in enumerate(joint_names, 1):
         # Calculate histogram data for each joint angle
@@ -170,6 +177,31 @@ def polar_plot_full_choreography(df):
 
     return fig
 
+import plotly.graph_objects as go
+
+def plot_line_graph_rom(df, title, focus):
+    # Define joint names based on the focus area
+    if focus == 'upper_right':
+        joint_names = ['a_left_shoulder_to_wrist_diff','a_right_shoulder_to_wrist_diff']
+    elif focus == 'upper_left':
+        joint_names = ['a_left_hip_to_foot_diff','a_right_hip_to_foot_diff']
+    elif focus == 'left':
+        joint_names = sorted([col for col in df.columns if col.startswith('a_left') and not col.endswith('_diff')])
+    elif focus == 'left_roc':
+        joint_names = sorted([col for col in df.columns if col.startswith('a_left') and col.endswith('_diff')])
+    else:
+        joint_names = ['a_head_to_hip_diff','a_right_shoulder_to_wrist_diff','a_right_hip_to_foot_diff','a_left_shoulder_to_wrist_diff','a_left_hip_to_foot_diff']
+        
+    fig = go.Figure()
+    
+    for joint_name in joint_names:
+        fig.add_trace(go.Scatter(x=df.index, y=df[joint_name], mode='lines', name=joint_name))
+
+    # Update layout
+    fig.update_layout(title=title, xaxis_title="Time",yaxis_title="Angle (Degrees)",legend_title="Joints")
+
+    return fig
+
 def interquartile_mean(df, angle_columns):
     iqr_means = {}
 
@@ -183,3 +215,70 @@ def interquartile_mean(df, angle_columns):
         iqr_means[col] = iqr_mean
 
     return iqr_means
+
+def plot_range_of_motion_arc(df):
+    fig = go.Figure()
+
+    for col in df.columns:
+        if col.startswith('a_') and not col.endswith('_diff'):
+            min_angle = np.min(df[col])
+            max_angle = np.max(df[col])
+            
+            # Generate points for the filled area
+            theta = np.linspace(min_angle, max_angle, num=30)  # Change num for resolution
+            r_inner = np.zeros_like(theta)  # Inner radius (at the center)
+            r_outer = np.ones_like(theta) * 5  # Outer radius (you can adjust this value)
+
+            # Combine the inner and outer radii
+            r = np.concatenate([r_inner, r_outer[::-1]])
+            theta = np.concatenate([theta, theta[::-1]])
+
+            fig.add_trace(go.Scatterpolar(
+                r=r,
+                theta=theta,
+                fill='toself',
+                name=col.replace('a_', '').replace('_', ' to ')
+            ))
+
+    # Set the layout for the polar chart
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(showticklabels=False, ticks=''),
+            angularaxis=dict(showticklabels=True, ticks='', direction='clockwise', rotation=90)
+        )
+    )
+
+    return fig
+
+def get_table_min_max_rom(df):
+    angle_columns = [col for col in df.columns if col.startswith('a_') and col.endswith('_diff')]
+    angle_mins = df[angle_columns].replace(0, np.nan).min().rename('Min Angle')
+    angle_maxs = df[angle_columns].max().rename('Max Angle')
+    angle_means = df[angle_columns].mean().rename('Mean Angle')
+    iqr_means = interquartile_mean(df,angle_columns)
+           
+    rom_stats = pd.DataFrame({
+        'connected_joints': angle_columns,
+        'min_range': angle_mins.values.round(2),
+        'max_range': angle_maxs.values.round(2),
+        'mean_range': angle_means.values.round(2),
+        'iqr_range': [round(iqr_means[col], 2) for col in angle_columns]
+        })
+    
+    fig = go.Figure(data=[go.Table(
+        header=dict(values=['Joint', 'Min Angle', 'Max Angle', 'Mean Angle','Iqr Angle']),
+        cells=dict(values=[rom_stats['connected_joints'], rom_stats['min_range'], rom_stats['max_range'],rom_stats['mean_range'], rom_stats['iqr_range']]))
+    ])
+    fig.update_layout(
+        height=200,  # Adjust this height to your preference
+        margin=dict(l=0, r=0, t=0, b=0)
+    )
+    
+    return fig
+
+def plot_histogram_spatial_orienttion(df, total_duration):
+    orientation_count = df['orientation'].value_counts().reset_index()
+    orientation_count.columns = ['Orientation', 'Frame Count']
+    orientation_count['Duration (Sec)'] = orientation_count['Frame Count'] / len(df) * total_duration
+    fig = px.bar(orientation_count, x='Orientation', y='Duration (Sec)')
+    return fig

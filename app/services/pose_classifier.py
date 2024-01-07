@@ -72,3 +72,11 @@ class PoseClassifier:
 def classify_row_orientation(row):
     classifier = PoseClassifier(row)
     return classifier.classify_pose()
+
+# Function to classify the row orientation
+def classify_row_face(row):
+    mean_z = np.mean([row['head_z'], row['chest_z'], row['hip_z']])
+    if mean_z < 0:  # If negative, it is front
+        return 'front'
+    else:
+        return 'back'
