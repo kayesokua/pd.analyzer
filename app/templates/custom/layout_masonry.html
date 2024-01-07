@@ -3,74 +3,79 @@
 
 
 {% block content %}
-<div class="container py-5">
-  {% include "custom/_quicknav.html" %}
-  <hr class="my-5">
-  <p class="lead my-5 fw-bold">Latest Uploads By Everyone {% if current_user.is_authenticated %}| <a
-      href="{{ url_for('.show_all', username=current_user.username) }}">Followed</a> | <a
-      href="{{ url_for('main.user', username=current_user.username) }}">You</a> {% endif %}</p>
-
-  <div class="row" data-masonry='{"percentPosition": true }'>
-    {% for post in posts %}
-    <div class="col-sm-6 col-lg-4 mb-4">
-      <div class="card p-3">
-        <div class="card-img-top">
-          <figure class="p-3 mb-0" style="height: 100%;">
-            <video class="figure-img img-fluid rounded" controls>
-              <source src="{{ url_for('main.serve_uploaded_video', author_id=post.author_id, post_id=post.id) }}">
-          
-            </video>
-          
-          
-          
-          
-          </figure>
-        </div>
-        <div class="card-body">
-          <p>
-            <img class="img-rounded profile-thumbnail" src="{{ post.author.gravatar(size=25) }}"
-              style="border-radius:1rem">
-            <a href="{{ url_for('.user', username=post.author.username) }}">{{ post.author.username }}</a>
-            posted {{ moment(post.last_updated_on).fromNow() }}
-          </p>
-          <p class="card-text">{{ post.description | truncate(100, True) }}</p>
-          <p class="card-text">
-            <a href="{{ url_for('main.post', id=post.id) }}">
-              <span class="label label-primary">View</span>
-            </a> | 
-            {% if post.video_processed_completed == 1 %}
-            <a href="{{ url_for('dashboard.report_page', id=post.id) }}">
-              <span class="label label-primary">View Report</span>
-            </a> | 
-            {% endif %} 
-
-            {% if current_user == post.author %}
-            <a href="{{ url_for('.edit', id=post.id) }}">
-              <span class="label label-primary">Edit</span>
-            </a>
-            {% elif current_user.is_administrator() %}
-            <a href="{{ url_for('.edit', id=post.id) }}">
-              <span class="label label-danger">Edit [Admin]</span>
-            </a>
-            {% endif %}
-          </p>
-        </div>
 
 
 
-
-      </div>
-    </div>
-
-
-    {% endfor %}
-  </div>
-  {% if pagination %}
-  <div class="pagination">
-    {{ macros.pagination_widget(pagination, '.index') }}
-  </div>
+<p class="lead my-5 text-center">
+  {% if current_user.is_authenticated %}
+  Latest Feed from Everyone {% if current_user.is_authenticated %}| <a
+    href="{{ url_for('.show_all', username=current_user.username) }}">Followed</a>{% endif %}
+  {% else %}
+  <a href="{{ url_for('auth.register') }}">Register Account</a> to see more content!
   {% endif %}
+</p>
+
+
+<div class="row" data-masonry='{"percentPosition": true }'>
+  {% for post in posts %}
+  <div class="col-sm-6 col-lg-4 mb-4">
+    <div class="card p-3">
+      <div class="card-img-top">
+        <figure class="p-3 mb-0" style="height: 100%;">
+          <video class="figure-img img-fluid rounded" controls>
+            <source src="{{ url_for('main.serve_uploaded_video', author_id=post.author_id, post_id=post.id) }}">
+
+          </video>
+
+
+
+        </figure>
+      </div>
+      <div class="card-body">
+        <p>
+          <img class="img-rounded profile-thumbnail" src="{{ post.author.gravatar(size=25) }}"
+            style="border-radius:1rem">
+          <a href="{{ url_for('.user', username=post.author.username) }}">{{ post.author.username }}</a>
+          posted {{ moment(post.last_updated_on).fromNow() }}
+        </p>
+        <p class="card-text">{{ post.description | truncate(100, True) }}</p>
+        <p class="card-text">
+          <a href="{{ url_for('main.post', id=post.id) }}">
+            <span class="label label-primary">View</span>
+          </a> |
+          {% if post.video_processed_completed == 1 %}
+          <a href="{{ url_for('dashboard.report_page', id=post.id) }}">
+            <span class="label label-primary">View Report</span>
+          </a> |
+          {% endif %}
+
+          {% if current_user == post.author %}
+          <a href="{{ url_for('.edit', id=post.id) }}">
+            <span class="label label-primary">Edit</span>
+          </a>
+          {% elif current_user.is_administrator() %}
+          <a href="{{ url_for('.edit', id=post.id) }}">
+            <span class="label label-danger">Edit [Admin]</span>
+          </a>
+          {% endif %}
+        </p>
+      </div>
+
+
+
+
+    </div>
+  </div>
+  {% endfor %}
+
+  <div class="col col-12 text-center">
+    <p class="lead">
+      Previous | Next
+      {% if pagination %}{{ macros.pagination_widget(pagination, '.index') }}{% endif %}
+    </p>
+  </div>
 
 </div>
-</div>
+
+
 {% endblock %}

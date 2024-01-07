@@ -1,0 +1,97 @@
+<nav class="navbar navbar-expand-lg border bg-body-tertiary rounded" aria-label="Thirteenth navbar example">
+  <div class="container-fluid">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample11"
+      aria-controls="navbarsExample11" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse d-lg-flex" id="navbarsExample11">
+      <a class="navbar-brand fw-bold col-lg-3 me-0" href="{{ url_for('main.index') }}">pd.analyzer</a>
+      <ul class="navbar-nav col-lg-6 justify-content-lg-center">
+
+        <li class="nav-item">
+          <a class="nav-link active fw-bold" aria-current="page" href="{{ url_for('main.index') }}">
+            {% include 'icons/sparkles.html' %}
+            Get Inspired
+          </a>
+        </li>
+
+        {% if current_user.is_authenticated %}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+            {% include 'icons/barchart.html' %} Explore Insights </a>
+          <ul class="dropdown-menu">
+            <li>
+              <a class="nav-link active" aria-current="page"
+                href="{{ url_for('main.user', username=current_user.username) }}">Your Reels </a>
+            </li>
+            
+            <li>
+              <a class="nav-link active" aria-current="page"
+                href="{{ url_for('dashboard.index', username=current_user.username) }}"> Your Dashbaord
+              </a>
+            </li>
+
+          </ul>
+        </li>
+        
+        {% endif %}
+
+
+
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+            Read Docs </a>
+          <ul class="dropdown-menu">
+            <li>
+              <a class="nav-link active" aria-current="page"
+                href="https://github.com/kayesokua/pd.analyzer/tree/initial-commit/docs" target="_blank">How It Works</a>
+            </li>
+            <li>
+              <a class="nav-link active" aria-current="page" href="{{ url_for('main.get_pose_dictionary') }}">Pose
+                Dictionary</a>
+            </li>
+
+
+          </ul>
+        </li>
+
+
+        {% if current_user.is_authenticated %}
+
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+            Account Settings</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{{ url_for('auth.change_password') }}">Change Password</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('auth.change_email_request') }}">Change Email</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('main.edit_profile') }}">Update Profile</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Log Out</a></li>
+
+          </ul>
+        </li>
+        {% endif %}
+
+
+      </ul>
+      
+      <div class="d-lg-flex col-lg-3 justify-content-lg-end">
+        {% if current_user.is_authenticated %}
+        <a class="btn btn-warning border border-warning" href="{{ url_for('main.upload_dance_video') }}">Upload New Video {% include 'icons/upload.html' %}</a>
+        {% else %}
+        <a class="btn btn-warning border border-warning" href="{{ url_for('auth.login') }}">Sign Back In {% include 'icons/login.html' %}</a>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+</nav>
+{% if current_user.is_authenticated %}
+<p class="text-muted text-end mb-5" style="margin-right:1em"><small>Logged in as {{ current_user.username }} ❤️</small>
+  {% else %}
+  <p class="text-muted text-end mb-5" style="margin-right:1em"><small></small>
+
+</p>
+
+{% endif %}
