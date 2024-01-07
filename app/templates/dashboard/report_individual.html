@@ -1,0 +1,141 @@
+{% extends 'custom/base.html' %}
+
+{% block content %}
+{% for post in posts %}
+<div class="container py-5">
+
+  <h3 class="display-6">{{post.title}}</h3>
+  <p>{{ post.description }}</p>
+
+  <p>
+    <a class="btn btn-dark" href="{{ url_for('dashboard.report_page_display_raw_data', id=post.id) }}">See
+      Raw Data</a>
+    <a class="btn btn-dark" href="{{ url_for('dashboard.report_page_display_matches', id=post.id) }}">See
+      Pose Matches</a>
+
+  </p>
+
+  
+
+  <hr class="my-3">
+  
+  <div class="row">
+    
+    <div class="row align-items-md-stretch">
+      <div class="row">
+        <div class="col-md-8">
+
+
+          <div class="row">
+            <div class="col-4">
+              <div class="card text-bg-secondary mb-3">
+                <div class="card-body">
+                  <h5 class="display-6">{{ total_duration }}</h5>
+                  <h6 class="card-subtitle mb-2">Total Duration</h6>
+
+                </div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="card text-bg-secondary mb-3">
+                <div class="card-body">
+                  <h5 class="display-6">{{ total_spins }}</h5>
+                  <h6 class="card-subtitle mb-2">Total Spins</h6>
+
+                </div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="card text-bg-secondary mb-3">
+                <div class="card-body">
+                  <h5 class="display-6">{{ total_frames }}</h5>
+                  <h6 class="card-subtitle mb-2">Frames Processed</h6>
+
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              
+
+            </div>
+          </div>
+        </div>
+
+
+        <div class="col-md-4">
+          <select class="form-select" id="plotTypeSelect" aria-label="Default select example"
+            onchange="updatePlotImage()">
+            <option>Open this select menu</option>
+            <option value="plot2d" selected>2D Animation</option>
+            <option value="plot3d">3D Animation</option>
+          </select>
+
+          <script>
+            function updatePlotImage() {
+              var plotType = document.getElementById("plotTypeSelect").value;
+              var img = document.getElementById("plotImage");
+              if (plotType === "plot2d") {
+                img.src = "{{ url_for('main.serve_processed_animated_2d', author_id=post.author_id, post_id=post.id) }}";
+              } else if (plotType === "plot3d") {
+                img.src = "{{ url_for('main.serve_processed_animated_3d', author_id=post.author_id, post_id=post.id) }}";
+              }
+            }
+          </script>
+
+          <div class="border my-3">
+            <img id="plotImage"
+              src="{{ url_for('main.serve_processed_animated_2d', author_id=post.author_id, post_id=post.id) }}"
+              alt="Selected Plot Will Display Here" class="img-fluid">
+          </div>
+        </div>
+
+
+
+
+
+        <div class="col-md-6">
+          <p class="mt-5 lead text-center">Spatial Orientation</p>
+          <div class="border">
+            <div id="plotly_so"></div>
+            <script>
+              var plotly_so = {{ plotly_so | safe }};
+              Plotly.newPlot('plotly_so', plotly_so);
+            </script>
+          </div>
+        </div>
+
+
+        <div class="col-md-6">
+          <p class="mt-5 lead text-center">Range of Motion Arc</p>
+          <div class="border">
+            <div id="plotly_rom_arc"></div>
+            <script>
+              var plotly_rom_arc = {{ plotly_rom_arc | safe }};
+              Plotly.newPlot('plotly_rom_arc', plotly_rom_arc);
+            </script>
+          </div>
+        </div>
+
+        <div class="col-md-12 my-3">
+          <p class="mt-5 lead text-center">Rate of Change</p>
+          <div class="border">
+            <div id="plotly_rom_table"></div>
+
+            <script>
+              var plotly_rom_table = {{ plotly_rom_table | safe }};
+              Plotly.newPlot('plotly_rom_table', plotly_rom_table);
+            </script>
+          </div>
+
+        </div>
+
+
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endfor %}
+
+{% endblock %}

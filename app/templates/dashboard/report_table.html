@@ -1,0 +1,49 @@
+{% extends 'custom/base.html' %}
+
+{% block content %}
+{% for post in posts %}
+<div class="container py-5">
+    <h3 class="display-6">{{post.title}}</h3>
+    <p>{{ post.description }}</p>
+    <p>
+        <a class="btn btn-dark" href="{{ url_for('dashboard.report_page', id=post.id) }}">Main Report</a>
+        <a class="btn btn-dark" href="{{ url_for('dashboard.report_page_display_matches', id=post.id) }}">See Pose Matches</a>
+        <a class="btn btn-outline-secondary" href="{{ url_for('dashboard.download_pose_world_data', id=post.id) }}">Download Pose World Data</a>
+        <a class="btn btn-outline-secondary" href="{{ url_for('dashboard.download_pose_norm_data', id=post.id) }}">Download Pose Normalized Data</a>
+    </p>
+
+    <hr class="my-3">
+    <div class="row">
+        <div class="col-md-12 my-3">
+            <div class="table-responsive small">
+                <table class="table table-striped table-sm" style="font-size: x-small;">
+                    <thead>
+                        <tr>
+                            {% if pose_world_data %}
+                            {% for key in pose_world_data[0] %}
+                            <th>{{ key }}</th>
+                            {% endfor %}
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in pose_world_data %}
+                        <tr>
+
+                            {% for value in row.values() %}
+                            <td>{{ value }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endfor %}
+
+{% endblock %}
