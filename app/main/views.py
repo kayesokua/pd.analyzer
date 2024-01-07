@@ -2,38 +2,38 @@ import os
 from flask import render_template, redirect, url_for, abort, flash, request, current_app, make_response, send_from_directory
 from flask_login import login_required, current_user
 from . import main
-from .forms import EditProfileForm, EditProfileAdminForm,VideoPostForm,CommentForm
+from .forms import EditProfileForm, EditProfileAdminForm,VideoPostForm,CommentForm, EditVideoPostForm
 from .. import db
 from ..models.base import Permission, Role, User, Post, Comment
 from ..decorators import admin_required, permission_required
 from werkzeug.utils import secure_filename
 import pandas as pd
 
-@main.route('/test', methods=['GET', 'POST'])
-def index():
-    form = VideoPostForm()
-    if current_user.can(Permission.WRITE) and form.validate_on_submit():
-        post = Post(body=form.description.data, author=current_user._get_current_object())
-        db.session.add(post)
-        db.session.commit()
-        return redirect(url_for('.index_test'))
-    page = request.args.get('page', 1, type=int)
-    show_followed = False
-    if current_user.is_authenticated:
-        show_followed = bool(request.cookies.get('show_followed', ''))
-    if show_followed:
-        query = current_user.followed_posts
-    else:
-        query = Post.query
-    pagination = query.order_by(Post.last_updated_on.desc()).paginate(
-        page=page, per_page=current_app.config['PDAPP_POSTS_PER_PAGE'],
-        error_out=False)
-    posts = pagination.items
-    return render_template('custom/layout_masonry.html', form=form, posts=posts,
-                           show_followed=show_followed, pagination=pagination, page=request.path)
+# @main.route('/test', methods=['GET', 'POST'])
+# def index():
+#     form = VideoPostForm()
+#     if current_user.can(Permission.WRITE) and form.validate_on_submit():
+#         post = Post(body=form.description.data, author=current_user._get_current_object())
+#         db.session.add(post)
+#         db.session.commit()
+#         return redirect(url_for('.index_test'))
+#     page = request.args.get('page', 1, type=int)
+#     show_followed = False
+#     if current_user.is_authenticated:
+#         show_followed = bool(request.cookies.get('show_followed', ''))
+#     if show_followed:
+#         query = current_user.followed_posts
+#     else:
+#         query = Post.query
+#     pagination = query.order_by(Post.last_updated_on.desc()).paginate(
+#         page=page, per_page=current_app.config['PDAPP_POSTS_PER_PAGE'],
+#         error_out=False)
+#     posts = pagination.items
+#     return render_template('custom/layout_masonry.html', form=form, posts=posts,
+#                            show_followed=show_followed, pagination=pagination, page=request.path)
     
 @main.route('/', methods=['GET'])
-def index_test():
+def index():
     page = request.args.get('page', 1, type=int)
     show_followed = False
     if current_user.is_authenticated:
@@ -211,8 +211,8 @@ def post(id):
         page=page, per_page=current_app.config['PDAPP_COMMENTS_PER_PAGE'],
         error_out=False)
     comments = pagination.items
-    return render_template('post.html', posts=[post], form=form,
-                           comments=comments, pagination=pagination)
+    return render_template('layout_post.html', posts=[post], form=form,
+                           comments=comments, pagination=pagination, page=request.path)
 
 
 @main.route('/edit/<uuid:id>', methods=['GET', 'POST'])
@@ -222,14 +222,25 @@ def edit(id):
     if current_user != post.author and \
             not current_user.can(Permission.ADMIN):
         abort(403)
-    form = VideoPostForm()
+    form = EditVideoPostForm()
+    
     if form.validate_on_submit():
+        
+        post.title = form.title.data
         post.description = form.description.data
+        post.video_timestamp = form.video_timestamp.data
+        
         db.session.add(post)
+        
         db.session.commit()
         flash('The post has been updated.')
         return redirect(url_for('.post', id=post.id))
+    
+    form.title.data = post.title
     form.description.data = post.description
+    form.video_timestamp.data = post.video_timestamp
+    form.deleted_from_view.data = post.deleted_from_view
+    
     return render_template('layout_form_basic.html', form=form, page=request.path, page_title="Edit Post")
 
 
@@ -240,7 +251,7 @@ def follow(username):
     user = User.query.filter_by(username=username).first()
     if user is None:
         flash('Invalid user.')
-        return redirect(url_for('.index_test'))
+        return redirect(url_for('.index'))
     if current_user.is_following(user):
         flash('You are already following this user.')
         return redirect(url_for('.user', username=username))
@@ -257,7 +268,7 @@ def unfollow(username):
     user = User.query.filter_by(username=username).first()
     if user is None:
         flash('Invalid user.')
-        return redirect(url_for('.index_test'))
+        return redirect(url_for('.index'))
     if not current_user.is_following(user):
         flash('You are not following this user.')
         return redirect(url_for('.user', username=username))
@@ -272,7 +283,7 @@ def followers(username):
     user = User.query.filter_by(username=username).first()
     if user is None:
         flash('Invalid user.')
-        return redirect(url_for('.index_test'))
+        return redirect(url_for('.index'))
     page = request.args.get('page', 1, type=int)
     pagination = user.followers.paginate(
         page=page, per_page=current_app.config['PDAPP_FOLLOWERS_PER_PAGE'],
@@ -289,7 +300,7 @@ def followed_by(username):
     user = User.query.filter_by(username=username).first()
     if user is None:
         flash('Invalid user.')
-        return redirect(url_for('.index_test'))
+        return redirect(url_for('.index'))
     page = request.args.get('page', 1, type=int)
     pagination = user.followed.paginate(
         page=page, per_page=current_app.config['PDAPP_FOLLOWERS_PER_PAGE'],
@@ -324,7 +335,7 @@ def moderate():
         page=page, per_page=current_app.config['PDAPP_COMMENTS_PER_PAGE'],
         error_out=False)
     comments = pagination.items
-    return render_template('moderate.html', comments=comments, pagination=pagination, page=page)
+    return render_template('layout_moderate.html', comments=comments, pagination=pagination, page=request.path, page_title ="Moderate Comments" )
 
 @main.route('/moderate/enable/<uuid:id>')
 @login_required
@@ -391,7 +402,6 @@ def get_pose_dictionary_table():
 @main.route('/videos/<author_id>/<post_id>', methods=['GET'])
 def serve_uploaded_video(author_id,post_id):
     video_filename = str(post_id) + ".mp4"
-    print(video_filename)
     data_directory = os.path.abspath(os.path.join(current_app.root_path, '..', 'data', 'uploads'))    
     rel_filepath = os.path.join(author_id,video_filename)
     return send_from_directory(data_directory, rel_filepath)

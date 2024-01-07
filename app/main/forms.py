@@ -52,10 +52,22 @@ class EditProfileAdminForm(FlaskForm):
 
 class VideoPostForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(max=128)])
-    description = TextAreaField('Description')
+    description = TextAreaField('Description', validators=[DataRequired()])
     video = FileField('Upload Video', validators=[FileRequired(),FileAllowed(['mp4'], 'MP4 videos only!')])
     video_timestamp = DateTimeLocalField('Date and Time', format='%Y-%m-%dT%H:%M', validators=[DataRequired()])
+    view_permission_public = BooleanField('Allow everyone can watch my video.')
+    view_permission_followers = BooleanField('Only allow my known followers (registered users) can watch my video.')
+    
     submit = SubmitField('Submit')
+
+class EditVideoPostForm(FlaskForm):
+    title = StringField('Title', validators=[DataRequired(), Length(max=128)])
+    description = TextAreaField('Description')
+    video_timestamp = DateTimeLocalField('Date and Time', format='%Y-%m-%dT%H:%M', validators=[DataRequired()])
+    deleted_from_view = BooleanField('Delete this entry')
+    submit = SubmitField('Submit')
+    
+
 
 class CommentForm(FlaskForm):
     body = StringField('Enter your comment', validators=[DataRequired()])

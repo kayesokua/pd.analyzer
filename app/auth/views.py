@@ -23,7 +23,7 @@ def before_request():
 @auth.route('/unconfirmed')
 def unconfirmed():
     if current_user.is_anonymous or current_user.confirmed:
-        return redirect(url_for('main.index_test'))
+        return redirect(url_for('main.index'))
     return render_template('auth/unconfirmed.html', page=request.path, page_title="Unconfirmed User")
 
 
@@ -36,7 +36,7 @@ def login():
             login_user(user, form.remember_me.data)
             next = request.args.get('next')
             if next is None or not next.startswith('/'):
-                next = url_for('main.index_test')
+                next = url_for('main.index')
             return redirect(next)
         flash('Invalid email or password.')
     return render_template('layout_form_basic.html', form=form, page=request.path, page_title="Log In")
