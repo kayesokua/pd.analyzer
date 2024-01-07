@@ -3,69 +3,92 @@
 
 
 {% block content %}
-<div class="container py-5">
-    <div class="row">
-        <div class="col-3">
-            <img class="img-rounded profile-thumbnail" src="{{ user.gravatar(size=100) }}"
-                style="border-radius: 15rem;">
+<!-- {% include 'custom/_quicknav.html' %} 
+<hr class="my-5">-->
+
+
+    <div class="row" style="margin-right:0">
+        
+
+        <div class="col-12">
+            <div class="bg-body-tertiary p-5 rounded">
+                <div class="row">
+                    <div class="col col-2">
+                        <img class="img-rounded profile-thumbnail" src="{{ user.gravatar(size=100) }}"
+                            style="border-radius: 15rem;">
+                    </div>
+                    <div class="col col-10">
+
+                        <p class="display-6">{{ user.username }}</p>
+                        {% if user.about_me %}
+                        <p class="lead">{% include 'icons/quotes.html' %} {{ user.about_me }} {% include
+                            'icons/quotes.html' %} </p>
+                        {% endif %}
+
+                        <p class="text-muted">
+                            <span class="fw-bold">{% if user.location %} 📍 {{ user.location }} </span> | {% endif %}
+                            Member since {{ moment(user.member_since).format('L') }}.
+                            Last seen {{ moment(user.last_seen).fromNow() }}.
+                            {{ user.posts.count() }} uploaded videos.
+                            {{ user.comments.count() }} feedbacks given.
+
+                        </p>
+
+                        {% if user.username == current_user.username %}
+                        <p>
+                            <a href="{{ url_for('main.followers', username=user.username) }}" class="link-dark"
+                                style="text-decoration: none;">👀 Following: <strong>{{user.followers.count() - 1 }}
+                                </strong></a>|
+                            <a href="{{ url_for('main.followed_by', username=user.username) }}" class="link-dark"
+                                style="text-decoration: none;">👥 Followers: <strong>{{user.followed.count() - 1 }}
+                                </strong></a>
+                        </p>
+                        {% else %}
+                        <p class="text-muted">
+                            👀 Following: <strong>{{user.followed.count() - 1 }} </strong>|
+                            👥 Followers: <strong>{{user.followers.count() - 1 }} </strong>
+
+                        </p>
+
+                        {% endif %}
+
+
+
+                        {% if current_user.is_authenticated and user != current_user and user.is_following(current_user)
+                        %}
+                        | <span class="label label-default">Follows you</span>
+                        {% endif %}
+
+
+
+
+                        <a href="mailto:{{ user.email }}" class="btn btn-warning"> {% include 'icons/email.html' %} Send
+                            Email</a>
+
+                        {% if current_user.can(Permission.FOLLOW) and user != current_user %}
+                        {% if not current_user.is_following(user) %}
+                        <a href="{{ url_for('.follow', username=user.username) }}" class="btn btn-primary">Follow</a>
+                        {% else %}
+                        <a href="{{ url_for('.unfollow', username=user.username) }}" class="btn btn-danger">Unfollow</a>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="col-8">
-            <h1>{{ user.username }} <a href="mailto:{{ user.email }}" class="btn btn-outline-secondary">Send Email <span
-                        class="badge text-bg-danger">ADMIN</span></a></h1>
+        
 
-            {% if user.name or user.location %}
-            <p>
-                {% if user.name %}{{ user.name }}{% endif %}
-                {% if user.location %}
-                from <i>{{ user.location }}</i></a>
-                {% endif %}
-            </p>
-            {% if current_user.is_administrator() %}
-            <p>
-            </p>
-            {% endif %}
 
-            </p>
-            {% endif %}
 
-            <p><strong>About Me:</strong>
-                {% if user.about_me %}{{ user.about_me }} | {% endif %}
-                Member since {{ moment(user.member_since).format('L') }}.
-                Last seen {{ moment(user.last_seen).fromNow() }}.
-                {{ user.posts.count() }} video posts.
-                {{ user.comments.count() }} comments.
-            </p>
-
-            <p>
-                {% if current_user.can(Permission.FOLLOW) and user != current_user %}
-                {% if not current_user.is_following(user) %}
-                <a href="{{ url_for('.follow', username=user.username) }}" class="btn btn-primary">Follow</a>
-                {% else %}
-                <a href="{{ url_for('.unfollow', username=user.username) }}" class="btn btn-danger">Unfollow</a>
-                {% endif %}
-                {% endif %}
-                <a href="{{ url_for('.followers', username=user.username) }}" class="btn btn-outline-secondary">
-                    Followers: {{user.followers.count() - 1 }} <span class="badge text-bg-danger">ADMIN</span></a></a>
-                <a href="{{ url_for('.followed_by', username=user.username) }}" class="btn btn-outline-secondary">
-                    Following: {{user.followed.count() - 1 }} <span class="badge text-bg-danger">ADMIN</span></a></a>
-                {% if current_user.is_authenticated and user != current_user and user.is_following(current_user) %}
-                | <span class="label label-default">Follows you</span>
-                {% endif %}
-
-            </p>
-
-            {% if user == current_user %}
-            {% include "custom/_quicknav_user.html" %}
-            {% endif %}
-        </div>
 
     </div>
-    <hr class="my-5">
-    <p class="lead my-5 fw-bold">
-    <h3>Choreographies by {{ user.username }}</h3>
-    </p>
+
+    <p class="lead my-5">Latest Updates by {{ user.username }}</p>
+
+    
 
     <div class="row" data-masonry='{"percentPosition": true }'>
+        
         {% for post in posts %}
         <div class="col-sm-6 col-lg-4 mb-4">
             <div class="card p-3">
@@ -112,5 +135,5 @@
     {% endif %}
 
 </div>
-</div>
+
 {% endblock %}

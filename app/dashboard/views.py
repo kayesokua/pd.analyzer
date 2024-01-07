@@ -10,7 +10,7 @@ import plotly
 import plotly.express as px
 import json
 
-from ..services.data_visualization import plot_histogram_spatial_orienttion,plot_range_of_motion_arc, get_table_min_max_rom
+from ..services.data_visualization import plot_histogram_spatial_orienttion,plot_range_of_motion_arc, get_table_rom, plotly_table_min_max_rom
 from ..services.report_calculation import get_spin_count
     
 @dashboard.route('/<username>', methods=['GET'])
@@ -50,8 +50,10 @@ def index(username):
     plotly_rom_arc = json.dumps(fig_rom_arc, cls=plotly.utils.PlotlyJSONEncoder)
     
     # Get Min and Max ROM Table
-    fig_range_of_motion = get_table_min_max_rom(combined_df)
+    fig_range_of_motion = plotly_table_min_max_rom(combined_df)
     plotly_rom_table = json.dumps(fig_range_of_motion, cls=plotly.utils.PlotlyJSONEncoder)
+    
+    rom_data = get_table_rom(combined_df)
         
     hours, remainder = divmod(int(total_duration), 3600)
     minutes, seconds = divmod(remainder, 60)
@@ -61,6 +63,7 @@ def index(username):
     return render_template('dashboard/index.html',
                            user=user,
                            posts=posts,
+                           rom_data=rom_data,
                            plotly_so=plotly_so,
                            plotly_rom_table=plotly_rom_table,
                            plotly_rom_arc=plotly_rom_arc,
@@ -77,6 +80,7 @@ def reports_overview(username):
     return render_template('dashboard/reports.html', user=user, posts=posts, page=request.path)
 
 @dashboard.route('/page/<uuid:id>', methods=['GET', 'POST'])
+@login_required
 def report_page(id):
     post = Post.query.get_or_404(str(id))
     
@@ -92,8 +96,12 @@ def report_page(id):
     pose_world_data_df = pose_world_data_df.drop(columns=['filepath_abs'], axis=1)
     
     # Get All Data
-    total_frames = len(pose_world_data_df)
+    
+    total_frame_entries = len(pose_world_data_df)
+    total_frames_processed = round(total_frame_entries / int(properties_json['frames']),2) * 100
+    
     total_duration = properties_json['duration']
+    
     
     hours, remainder = divmod(int(total_duration), 3600)
     minutes, seconds = divmod(remainder, 60)
@@ -110,9 +118,10 @@ def report_page(id):
     fig_rom_arc = plot_range_of_motion_arc(pose_world_data_df)
     plotly_rom_arc = json.dumps(fig_rom_arc, cls=plotly.utils.PlotlyJSONEncoder)
     
+    
+    
     # Get Min and Max ROM Table
-    fig_range_of_motion = get_table_min_max_rom(pose_world_data_df)
-    plotly_rom_table = json.dumps(fig_range_of_motion, cls=plotly.utils.PlotlyJSONEncoder)
+    rom_data = get_table_rom(pose_world_data_df)
     
     
     total_spins = get_spin_count(pose_world_data_df)
@@ -120,16 +129,18 @@ def report_page(id):
     return render_template('dashboard/report_individual.html',
                            posts=[post],
                            plotly_so=plotly_so,
-                           plotly_rom_table=plotly_rom_table,
+                           rom_data=rom_data,
                            plotly_rom_arc=plotly_rom_arc,
                            total_spins=total_spins,
-                           total_frames=total_frames,
+                           total_frame_entries=total_frame_entries,
+                           total_frames_processed=total_frames_processed,
                            total_duration=total_duration_str,
                            pose_world_data=pose_world_data,
                            page=request.path,
     )
 
 @dashboard.route('/page/<uuid:id>/table', methods=['GET', 'POST'])
+@login_required
 def report_page_display_raw_data(id):
     post = Post.query.get_or_404(str(id))
     
@@ -172,6 +183,7 @@ def report_page_display_matches(id):
     
     
 @dashboard.route('download/data/<uuid:id>/world')
+@login_required
 def download_pose_world_data(id):
     post = Post.query.get_or_404(str(id))
     rel_user_post_processed_path = os.path.join('data', 'processed', str(post.author_id), str(post.id))
@@ -180,6 +192,7 @@ def download_pose_world_data(id):
     return send_file(pose_world_data_path, as_attachment=True)
 
 @dashboard.route('download/data/<uuid:id>/normalized')
+@login_required
 def download_pose_norm_data(id):
     post = Post.query.get_or_404(str(id))
     rel_user_post_processed_path = os.path.join('data', 'processed', str(post.author_id), str(post.id))
