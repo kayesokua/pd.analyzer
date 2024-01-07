@@ -250,7 +250,7 @@ def plot_range_of_motion_arc(df):
 
     return fig
 
-def get_table_min_max_rom(df):
+def plotly_table_min_max_rom(df):
     angle_columns = [col for col in df.columns if col.startswith('a_') and col.endswith('_diff')]
     angle_mins = df[angle_columns].replace(0, np.nan).min().rename('Min Angle')
     angle_maxs = df[angle_columns].max().rename('Max Angle')
@@ -275,6 +275,23 @@ def get_table_min_max_rom(df):
     )
     
     return fig
+
+def get_table_rom(df):
+    angle_columns = [col for col in df.columns if col.startswith('a_') and col.endswith('_diff')]
+    angle_mins = df[angle_columns].replace(0, np.nan).min().rename('Min Angle')
+    angle_maxs = df[angle_columns].max().rename('Max Angle')
+    angle_means = df[angle_columns].mean().rename('Mean Angle')
+    iqr_means = interquartile_mean(df,angle_columns)
+           
+    rom_stats = pd.DataFrame({
+        'connected_joints': angle_columns,
+        'min_range': angle_mins.values.round(2),
+        'max_range': angle_maxs.values.round(2),
+        'mean_range': angle_means.values.round(2),
+        'iqr_range': [round(iqr_means[col], 2) for col in angle_columns]
+        })
+    
+    return rom_stats.to_dict(orient='records')
 
 def plot_histogram_spatial_orienttion(df, total_duration):
     orientation_count = df['orientation'].value_counts().reset_index()
